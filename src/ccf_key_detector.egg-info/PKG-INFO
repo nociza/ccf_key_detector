@@ -1,0 +1,66 @@
+Metadata-Version: 2.4
+Name: ccf-key-detector
+Version: 0.1.0
+Summary: Realtime tonal-center probability estimator on a continuous chroma cycle
+Author: Thomas Pan
+Keywords: audio,music,signal-processing,realtime,tonality
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+Requires-Dist: numpy>=1.24
+Requires-Dist: sounddevice>=0.4
+Requires-Dist: pyqtgraph>=0.13
+Requires-Dist: PyQt5>=5.15
+Requires-Dist: PyOpenGL>=3.1
+Provides-Extra: dev
+Requires-Dist: pytest>=7.4; extra == "dev"
+Requires-Dist: pytest-asyncio>=0.21; extra == "dev"
+Requires-Dist: black>=23.0; extra == "dev"
+Requires-Dist: ruff>=0.3; extra == "dev"
+Requires-Dist: matplotlib>=3.8; extra == "dev"
+
+# Realtime Tonal-Center Probability (Continuous Chroma)
+
+This repository hosts a staged implementation of a realtime tonal-center probability estimator over a continuous chroma cycle anchored at 220 Hz. The work proceeds in five milestones that mirror the collaboration workflow with Codex:
+
+1. Project scaffolding (current)
+2. Continuous Chroma Feature (CCF) extraction and validation with synthetic tones
+3. Single-Key Evaluator (SKE) baseline using the Krumhansl–Kessler major profile
+4. Tonal-center probability distribution across circular transpositions
+5. Realtime visualization pipeline for polar and cylinder views
+
+The source tree is organised to reflect the realtime pipeline: audio ingestion, optional pre-filtering, feature extraction, transposition scanning, key evaluation, and user interface. Every module currently contains structural stubs, type contracts, and documentation TODOs to support incremental development without committing to algorithms prematurely.
+
+## Repository Layout
+
+```
+src/ccf_key_detector/
+  audio_io/        # Live/file input abstraction and resampling hooks
+  prefilter/       # Deterministic voice-friendly filters (gate/HPF)
+  features_ccf/    # Spectrum-to-continuous-chroma conversion utilities
+  transpose/       # Circular shift operator T and helpers
+  ske/             # Single-key evaluator strategies (KK major baseline first)
+  rt_viz/          # Realtime visualization modes and buffers
+  app/             # Top-level runner and orchestration logic
+config/            # Runtime configuration schemas and defaults
+tests/             # Placeholder tests for upcoming milestones
+```
+
+## Development Notes
+
+- Python 3.10+ is required.
+- External dependencies (audio I/O, plotting, GPU) are not yet pinned; they will be added alongside their respective milestone implementations.
+- Live input relies on the `sounddevice` package (PortAudio); install system-level audio drivers accordingly if you plan to run the realtime pipeline.
+- The 3D surface visualiser requires `pyqtgraph`, `PyQt5`, and `PyOpenGL`; install these before running with `--viz-mode surface`.
+- The realtime runner surfaces the KK-major cosine similarity (`ske_score`) for each hop alongside the CCF visualization.
+- No file exports (CSV/JSON) are generated during this milestone; realtime-only behaviour is enforced later.
+
+## Test Utilities
+
+- `scripts/generate_mixed_tones.py` synthesises a three-tone clip (250/300/440 Hz) and plots its continuous chroma PDF for quick manual inspection: `PYTHONPATH=src python scripts/generate_mixed_tones.py`.
+- `scripts/generate_kk_profile_audio.py` produces a KK-major-profile-matched waveform and prints the resulting SKE score: `PYTHONPATH=src python scripts/generate_kk_profile_audio.py`.
+- `scripts/plot_ske_distribution.py <audio.wav>` renders the CCF, KK profile overlay, and full SKE tonal distribution for a given audio file.
+
+Proceed to each milestone by filling the TODO blocks inside the relevant modules. Tests should be upgraded from scaffolding skips to real coverage as functionality lands.
