@@ -22,6 +22,8 @@ def parse_args() -> argparse.Namespace:
 
 
 def synthesise(duration: float, sample_rate: int) -> np.ndarray:
+    """Synthesize a normalised waveform that follows the KK major amplitudes."""
+
     amplitudes = compute_amplitudes(sample_rate, duration)
     t = np.arange(int(sample_rate * duration), dtype=np.float64) / sample_rate
     waveform = np.zeros_like(t)
@@ -61,6 +63,8 @@ def main() -> None:
 
 
 def compute_amplitudes(sample_rate: int, duration: float) -> np.ndarray:
+    """Solve for partial amplitudes whose CCF matches the KK major profile."""
+
     extractor = create_extractor(CCFConfig(smoothing_sigma_bins=0.0))
     t = np.arange(int(sample_rate * duration), dtype=np.float64) / sample_rate
     basis = []
@@ -76,6 +80,7 @@ def compute_amplitudes(sample_rate: int, duration: float) -> np.ndarray:
     active = np.ones(12, dtype=bool)
     weights = np.zeros(12, dtype=np.float64)
     for _ in range(12):
+        # Impose a simplex constraint by solving for non-negative weights whose sum is one.
         B = basis_matrix[:, active]
         A = np.vstack([B, np.ones((1, B.shape[1]), dtype=np.float64)])
         b = np.concatenate([target, [1.0]])
@@ -84,7 +89,7 @@ def compute_amplitudes(sample_rate: int, duration: float) -> np.ndarray:
         if np.all(weights[active] >= -1e-9):
             weights = np.clip(weights, 0.0, None)
             break
-        worst = np.argmin(weights)
+        worst = np.argmin(np.where(active, weights, np.inf))
         active[worst] = False
     weights = np.clip(weights, 0.0, None)
     total = weights.sum()

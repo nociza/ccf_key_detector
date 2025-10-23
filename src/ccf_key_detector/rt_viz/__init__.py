@@ -6,9 +6,10 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Optional, Protocol
 
-from .polar import PolarVisualizer
 from .cylinder import CylinderVisualizer
 from .line import LineVisualizer
+from .osc import OscStreamVisualizer
+from .polar import PolarVisualizer
 from .surface import SurfaceVisualizer
 
 
@@ -17,6 +18,8 @@ class VisualizationMode(str, Enum):
     POLAR_SINGLE = "polar_single"
     CYLINDER_WINDOW = "cylinder_window"
     SURFACE = "surface"
+    OSC_CCF = "osc_ccf"
+    OSC_SKE_DIST = "osc_ske_dist"
 
 
 @dataclass(frozen=True)
@@ -27,6 +30,11 @@ class VisualizationConfig:
     render: bool = True
     tail_length: int = 3
     normalize_ske_dist: bool = False
+    osc_host: str = "127.0.0.1"
+    osc_port: int = 7400
+    osc_address: str = "/ccf/pdf"
+    osc_include_frame_index: bool = True
+    osc_max_packet_size: int = 65507
 
 
 @dataclass
@@ -51,6 +59,8 @@ _VISUALIZER_MAP = {
     VisualizationMode.POLAR_SINGLE: PolarVisualizer,
     VisualizationMode.CYLINDER_WINDOW: CylinderVisualizer,
     VisualizationMode.SURFACE: SurfaceVisualizer,
+    VisualizationMode.OSC_CCF: lambda config: OscStreamVisualizer(config, payload="ccf"),
+    VisualizationMode.OSC_SKE_DIST: lambda config: OscStreamVisualizer(config, payload="ske"),
 }
 
 

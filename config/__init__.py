@@ -1,4 +1,4 @@
-"""Configuration loading and validation stubs."""
+"""Application configuration loading and validation helpers."""
 
 from __future__ import annotations
 
@@ -15,11 +15,8 @@ class AppConfig:
 
 
 def load_config(path: Path | None = None) -> AppConfig:
-    """Load configuration data from disk or return defaults.
-
-    File-backed configuration is out of scope for the current milestone.
-    """
+    """Load configuration data from disk or return defaults."""
 
     if path is not None:
-        raise NotImplementedError("Config file parsing will be added in a later milestone")
+        raise NotImplementedError("Config file parsing will be added in a later release")
     return AppConfig(runner=RunnerConfig())

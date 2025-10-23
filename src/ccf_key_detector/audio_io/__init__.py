@@ -247,7 +247,7 @@ def _resample_linear(data: np.ndarray, src_rate: int, dst_rate: int) -> np.ndarr
 
 
 def create_audio_stream(config: AudioStreamConfig) -> AudioStream:
-    """Factory placeholder for the audio stream implementation."""
+    """Factory for the audio stream implementation."""
 
     if config.use_live_input:
         return _LiveAudioStream(config)

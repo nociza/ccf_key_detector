@@ -85,7 +85,7 @@ def create_prefilter(config: PreFilterConfig) -> PreFilter:
         return _BypassPreFilter(config)
     if config.mode == PreFilterMode.HPF_ONLY:
         return _HighPassPreFilter(config)
-    raise NotImplementedError("Spectral gate will be provided in a future milestone")
+    raise NotImplementedError("Spectral gate mode is not yet implemented")
 
 
 __all__ = [

@@ -1,9 +1,4 @@
-"""Core package for the realtime tonal-center probability estimator.
-
-The package is intentionally scaffolded without implementations. Each submodule
-contains contracts, dataclasses, and TODO markers that will be filled in across
-upcoming milestones.
-"""
+"""Core package for the realtime tonal-center probability estimator."""
 
 from importlib import metadata
 

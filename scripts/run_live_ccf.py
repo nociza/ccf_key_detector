@@ -78,6 +78,35 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Print diagnostics (including SKE score) to stdout each hop",
     )
+    parser.add_argument(
+        "--osc-host",
+        type=str,
+        default="127.0.0.1",
+        help="Destination host for OSC streaming (requires an OSC viz-mode)",
+    )
+    parser.add_argument(
+        "--osc-port",
+        type=int,
+        default=7400,
+        help="Destination UDP port for OSC streaming",
+    )
+    parser.add_argument(
+        "--osc-address",
+        type=str,
+        default="/ccf/pdf",
+        help="OSC address pattern used for streamed packets",
+    )
+    parser.add_argument(
+        "--osc-skip-frame-index",
+        action="store_true",
+        help="Omit the frame index from OSC payloads",
+    )
+    parser.add_argument(
+        "--osc-max-packet-size",
+        type=int,
+        default=65_507,
+        help="Maximum OSC datagram payload size before raising an error",
+    )
     return parser.parse_args()
 
 
@@ -114,6 +143,11 @@ def main() -> None:
         tail_length=args.tail_length,
         render=not args.headless,
         normalize_ske_dist=args.normalize_ske_dist,
+        osc_host=args.osc_host,
+        osc_port=args.osc_port,
+        osc_address=args.osc_address,
+        osc_include_frame_index=not args.osc_skip_frame_index,
+        osc_max_packet_size=args.osc_max_packet_size,
     )
     visualizer = create_visualizer(viz_config)
 

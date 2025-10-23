@@ -111,7 +111,7 @@ def expand_profile(profile: Sequence[float], target_bins: int) -> np.ndarray:
 
 
 def create_ske(config: SKEConfig) -> SKEvaluator:
-    """Factory placeholder that will dispatch to backend-specific evaluators."""
+    """Construct an SKE evaluator based on the configured backend."""
 
     if config.mode == SKEBackend.KK_MAJOR:
         return _KKMajorEvaluator(config)
