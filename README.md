@@ -1,6 +1,7 @@
 tldr: 
 
 STEP 0: get the dependencies sorted out
+
 STEP 1: run
 python scripts/run_live_ccf.py --viz-mode osc_ccf
 or
@@ -10,7 +11,10 @@ STEP 2: Listen at 7400.
 
 STEP 2 alternative: respectively open 'ccf_osc_monitor.scd' or 'ske_dist_osc_monitor.scd' and evaluate. Change according to usage.
 
-For any question, contact Eva at hanyinliang.eva@berkeley.edu.
+For any question, contact 
+
+Methods and Math: Eva at hanyinliang.eva@berkeley.edu.
+Pipeline and usage: Tom at tcp3sx@berkeley.edu
 
 # Realtime Tonal-Center Probability (Continuous Chroma)
 
