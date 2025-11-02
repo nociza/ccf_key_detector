@@ -9,7 +9,7 @@ from typing import Dict, Iterator, Optional, Sequence
 import numpy as np
 
 from ccf_key_detector.audio_io import AudioStream, AudioStreamConfig, create_audio_stream
-from ccf_key_detector.features_ccf import CCFConfig, create_extractor
+from ccf_key_detector.features import CCFConfig, create_extractor
 from ccf_key_detector.prefilter import PreFilter, PreFilterConfig, create_prefilter
 from ccf_key_detector.rt_viz import VisualizationConfig
 from ccf_key_detector.ske import SKEConfig, create_ske

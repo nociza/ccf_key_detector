@@ -1,0 +1,667 @@
+﻿Center-Aware Interval Torus VAE — Complete Build & Test Plan (for Codex)
+This is a step-by-step, small-scale-first development spec for a feature-level VAE that learns a tonal-center space. It compiles everything we discussed: goals, features, losses, models, datasets, milestones, acceptance tests, evaluation, risks, and the T4 server setup. No code; every step is testable on tiny data.
+________________
+
+
+0) Project goal & assumptions
+Goal: Learn a latent geometry where excerpts cluster by tonal-center proximity, using distributional (not waveform) features.
+Assumptions:
+1. “Tonal center” is probabilistic and high-dimensional (not a single frequency), often multi-modal.
+
+2. Order matters less than aggregate interval structure; still, short context (cadences) can disambiguate—so we keep an order-invariant path, with an optional short-context path.
+
+Core features (all differentiable on a circular grid):
+   * log-CCF (p(\theta)): pitch-class density over one octave, (\theta\in[0,1)) (rotation = transposition).
+
+   * CICV (g(\delta)=\mathrm{iFFT}(|\mathrm{FFT}(p)|^2)): rotation-invariant interval distribution over (\delta\in[0,1)).
+
+   * Interval Torus (M(\theta,\delta)=p(\theta),p(\theta+\delta)): retains where intervals live (phase).
+
+   * Center-Field (C(\theta)=p(\theta),(W*p)(\theta)): “tonic saliency” via interval supports (unison/5th/4th/±3rds).
+
+Loss suite:
+      * z-loss on CICV (interval content; transposition/inversion invariant).
+
+      * phase-loss on aligned toruses (placement).
+
+      * center-loss on center-field mean & dispersion (explicit tonic geometry).
+
+      * Standard VAE reconstruction + KL (with warm-up / free-bits).
+
+________________
+
+
+1) Server environment (Huawei Cloud, 1×T4 16 GB, Ubuntu 22.04)
+Driver/CUDA:
+         * Preferred: NVIDIA driver ≥ 520 and CUDA 11.8 (widely supported by PyTorch 2.x “cu118”).
+
+         * If you must keep ~470 / 11.4, pin a compatible (older) PyTorch build. Document exact versions.
+
+Performance flags:
+            * Enable AMP (mixed precision), cuDNN benchmark/fast kernels, channels-last memory format for conv layers.
+
+            * Dataloaders: pinned memory, workers ≤ 8 (scale up gradually).
+
+            * Storage: system disk ≥ 100 GB; keep datasets/checkpoints in OBS or backup vault; cache locally.
+
+            * Bandwidth: small after setup.
+
+Sanity check: Confirm GPU is T4 with nvidia-smi; allocate a small GPU tensor; log PyTorch + CUDA versions.
+________________
+
+
+2) Repository additions (structure SUGGESTED; expand as needed)
+src/ccf_key_detector/
+  features/
+    ccf.py           # Build log-CCF p(θ); smoothing; rotation utilities
+    cicv.py          # g(δ)=iFFT(|FFT(p)|^2); fold [0,0.5] utilities
+    torus.py         # M(θ,δ)=p(θ)p(θ+δ); column sums; θ-alignment
+    centerfield.py   # W*p; C(θ)=p(θ)(W*p)(θ); circular mean μ, concentration ρ
+  losses/
+    zloss.py         # CICV distances (L2 / JS / KL / Wasserstein on circle)
+    phaselosss.py    # Torus L2 after best θ-rotation (± inversion option)
+    centerloss.py    # Center proximity: (μ,ρ) distance on circle
+    schedules.py     # KL warm-up, free-bits utilities
+  models/
+    vae_small.py     # Small Conv-VAE for 1D/2D features; AMP-friendly
+    heads.py         # Latent split: z_center (2-vec) + z_texture (D-2)
+  data/
+    datasets.py      # Tiny synthetic set; mini real-clips set; caching
+  train/
+    train_small.py   # Minimal trainer; toggles for features & losses
+  eval/
+    baselines.py     # HPCP + K-S; Tonal centroid baseline
+    metrics.py       # Circular error; near-miss on fifths; clustering; retrieval
+tests/
+  test_features.py
+  test_losses.py
+  test_train_loop.py
+
+
+________________
+
+
+3) Milestone A — Feature pipeline (deterministic, unit-tested)
+A1. log-CCF (p(\theta))
+Inputs: mono audio or ((f,w)) peaks.
+Steps: CQT/HPCP-style salience → (\theta=\mathrm{frac}(\log_2(f/f_{ref}))) → accumulate on circular grid (N\in{720,1024}) → light wrapped Gaussian/von-Mises smoothing → normalize (\sum p=1).
+Acceptance tests:
+               * Octave-equivalent inputs yield identical (p).
+
+               * Transpose by (k) semitones shifts (p) by (k/12).
+
+               * Single harmonic tone near 220 Hz peaks at (\theta\approx 0).
+
+A2. CICV (g(\delta))
+Definition: (g=\mathrm{iFFT}(|\mathrm{FFT}(p)|^2)), normalized to 1. Provide folded variant on ([0,0.5]).
+Acceptance tests:
+                  * Rotating (p) leaves (g) unchanged.
+
+                  * Major triad vs transposed major → same (g). Major vs minor → different (g).
+
+A3. Interval Torus (M(\theta,\delta))
+Definition: (M(\theta,\delta)=p(\theta),p(\theta+\delta)). Output full (M), column sums (g(\delta)=\sum_\theta M(\theta,\delta)), and θ-rotation utility.
+Acceptance tests:
+                     * Column sums match CICV (within tolerance).
+
+                     * Rotating (p) shifts (M) along (\theta) only; (g) stable.
+
+A4. Center-Field (C(\theta))
+Definition: (C(\theta)=p(\theta),(W*p)(\theta)) with (W) = mixture of narrow bumps at:
+                        * 0 (unison), (\log_2(3/2)) (5th), (1-\log_2(3/2)) (4th), (\log_2(5/4)) (M3), (\log_2(6/5)) (m3), weights e.g. ([1.0, 0.8, 0.6, 0.35, 0.3]).
+
+Compute circular mean (\mu) and concentration (\rho\in[0,1]).
+Acceptance tests:
+                           * Single-center tone → (C) unimodal, (\rho) high.
+
+                           * Two-center mixture → (C) bimodal, (\rho) moderate.
+
+________________
+
+
+4) Milestone B — Losses (stable & differentiable)
+B1. z-loss (interval content)
+Compare normalized CICVs (g_p, g_q). Default L2; also expose JS/KL/Wasserstein on the circle.
+Checks:
+ Equal up to rotation/inversion → near-zero; distinct fabrics → positive.
+B2. phase-loss (placement on torus)
+Pre-align best θ-shift via circular cross-correlation (on (p) or torus row-sum).
+Loss: ( \min_\phi |M_p - \text{shift}_\theta(M_q,\phi)|_F^2 ). Optionally minimize over inversion.
+Checks:
+ Rotated copies → ~0 after alignment; z-related yet phase-different → positive.
+B3. center-loss (tonic geometry)
+From (C_p,C_q) compute ((\mu_p,\rho_p),(\mu_q,\rho_q)).
+Loss: (\min(\rho_p,\rho_q)\cdot [1-\cos 2\pi(\mu_p-\mu_q)]).
+Checks:
+ Same center → ~0; adjacent (circle-of-fifths neighbors) → small; far → larger; low-(\rho) down-weighted.
+B4. VAE regularization
+Implement KL warm-up (β from 0 to target) and free-bits per latent dim.
+Checks:
+ KL per-dim > 0; mutual information not ~0 on toy set (no collapse).
+________________
+
+
+5) Milestone C — Models (tiny first; feature-level only)
+C1. Small Conv-VAE (primary)
+Inputs (configurable):
+                              * 1D: CICV (g(\delta)) (interval-invariant baseline), or Center-Field (C(\theta)).
+
+                              * 2D: Torus (M(\theta,\delta)); optionally add (g) as a broadcast second channel.
+
+Latents: split into (z_{\text{center}}\in\mathbb{R}^2) (interpreted as circular coordinate) and (z_{\text{texture}}\in\mathbb{R}^{D-2}).
+Outputs: reconstruct chosen input; auxiliary heads predict (g) and (C).
+Total loss: recon + KL (warm-up / free-bits) + (\lambda)·z-loss + (\eta)·phase-loss + (\gamma)·center-loss.
+Acceptance (synthetic overfit):
+                                 * Recon ↓; KL ↑ to target; z/phase/center losses ↓ together (no domination).
+
+                                 * Latent ring emerges: angle of (z_{\text{center}}) correlates with true center; nearby keys cluster.
+
+C2. Two-branch variant (optional)
+                                    * Order-invariant branch: as above.
+
+                                    * Short-context branch: stack 1–4 s of framewise CCF; tiny 1-D conv/attention; average-pool over time.
+Concatenate into latent; same losses.
+
+Acceptance: improves (\rho) (confidence) for cadential clips vs. scrambled frames.
+________________
+
+
+6) Milestone D — Data & tiny experiments
+D1. Synthetic micro-corpus
+Use your scripts/generate_mixed_tones.py to produce:
+                                       * Single tones; dyads (5th/4th/±3rds); triads (maj/min); sevenths; noisy mixtures.
+
+                                       * Augment: detune ±30–50 cents, mild EQ, reverb.
+
+                                       * Label “intended center.”
+
+Use: unit tests & quick overfit (100–500 samples).
+D2. Mini real-clips set
+Curate 50–200 clips (15–30 s) with known keys; include transposed variants; mono, 22–44 kHz; manifest file.
+Use: qualitative plots, retrieval, early ablations.
+________________
+
+
+7) Milestone E — Evaluation & ablations (paper-grade, even small-scale)
+Baselines:
+                                          * HPCP + Krumhansl–Schmuckler (profile correlation).
+
+                                          * Tonal centroid / Tonnetz features + simple MLP.
+
+Metrics:
+                                             * Key accuracy + near-miss on circle-of-fifths distance.
+
+                                             * Center error (circular distance); calibration of (\rho).
+
+                                             * Latent clustering (silhouette) & retrieval mAP (relevance = center distance).
+
+Ablations:
+                                                * CICV-only vs Torus-only vs Torus+g vs Torus+g+Center-Field.
+
+                                                * With/without z-loss; with/without phase-loss; with/without center-loss.
+
+                                                * Folded vs directed intervals.
+
+                                                * Two-branch vs invariant-only.
+
+Acceptance: Full model ≥ baselines; confusion banded along fifths; interpretable latents.
+________________
+
+
+8) Milestone F — Stability & guardrails (monitoring + quick fixes)
+Watch for:
+                                                   * Posterior collapse: KL→0, z looks like noise.
+Fix: stronger encoder / weaker decoder, free-bits, slower KL warm-up, small contrastive term on (z).
+
+                                                   * Symmetry drift (rotation/inversion): inconsistent alignment.
+Fix: always align θ before phase-loss; if inversion-invariant, minimize over both orientations.
+
+                                                   * Centers snapping (over-strong (W)): centers stick to a grid.
+Fix: reduce (W) weights; add entropy regularizer on (C); cross-validate (W).
+
+                                                   * Pairwise blind spot: miss triadic cues.
+Fix: optional tiny triad head (scores for a small set of triad templates) as an auxiliary feature/loss.
+
+                                                   * Front-end brittleness: detuning/timbre noise.
+Fix: HPSS, harmonic whitening, slight circular smoothing, detune/EQ augmentation.
+
+                                                   * OOM/slow:
+ Fix: AMP on; N=720 first (then 1024); compute torus on-the-fly; reduce batch.
+
+Monitoring: recon, KL per-dim, mutual information proxy, z/phase/center losses, entropy of (p) and (C), (\rho) histogram, VRAM.
+________________
+
+
+9) Training protocol (T4-friendly)
+                                                      * Resolution (N): start 720, try 1024 later.
+
+                                                      * Batch: 16–32 (AMP on; gradient clip).
+
+                                                      * Schedules: warm-up KL; ramp phase / center weights after recon stabilizes.
+
+                                                      * Caching: build features once per epoch or cache to disk; torus can be computed on-the-fly.
+
+Early-stop indicators: recon plateau + improving auxiliary losses; visible latent ring; retrieval improves; no collapse signals.
+________________
+
+
+10) RAVE usage (optional, creative; not for core learning)
+                                                         * After training the feature-VAE, learn a small regressor from ((z_{\text{center}}, z_{\text{texture}})) to a frozen RAVE decoder latent → center-aware resynthesis demo.
+
+                                                         * Or multi-task: add a low-rate mel-spectrogram head for nicer sonifications while keeping feature losses primary.
+
+(Reminder: CICV/torus are interval-domain features, not audio; do not feed them to an audio VAE as waveforms.)
+________________
+
+
+11) Reproducibility & logging
+                                                            * Record exact driver/CUDA/PyTorch versions; fix seeds for tests; keep config files in repo.
+
+                                                            * Save: model checkpoints, feature configs ((N), smoothing, (W)), evaluation manifests.
+
+                                                            * Export figures for 3–4 canonical examples: (p(\theta)), (g(\delta)), (M(\theta,\delta)), (C(\theta)); and latent ring plots.
+
+________________
+
+
+12) Timeline & deliverables (small-scale first)
+Week 1 – Features & Env
+                                                               * Environment locked; GPU verified; AMP on.
+
+                                                               * Implement A1–A4 with unit tests green.
+
+                                                               * Produce sanity plots for synthetic tones.
+
+Week 2 – Minimal VAE
+                                                                  * Implement losses B1–B4 and model C1.
+
+                                                                  * Overfit tiny synthetic set (100–500 examples).
+
+                                                                  * Demonstrate latent ring, no collapse, and decreasing z/phase/center losses.
+
+Week 3 – Real clips & Ablations
+                                                                     * Prepare mini real-clips set; run baselines; run E ablations.
+
+                                                                     * Show retrieval by center proximity; near-miss analysis along fifths.
+
+Week 4 – Options & Paper Assets
+                                                                        * (Optional) Two-branch C2; light triad head if needed.
+
+                                                                        * Prepare figures/tables; optional RAVE demo mapping; finalize reproducibility doc.
+
+________________
+
+
+13) Small-scale end-to-end checklist
+                                                                           1. Build (p(\theta)) on 100 synthetic items → octave/transpose invariance holds.
+
+                                                                           2. Verify (g(\delta)) invariance under rotation.
+
+                                                                           3. Verify torus column sums match (g); rotation shifts rows only.
+
+                                                                           4. Compute (C(\theta)), (\mu,\rho) for single- and two-center cases.
+
+                                                                           5. Train tiny VAE (torus+g) → recon ↓, KL > 0, z/phase/center losses ↓.
+
+                                                                           6. Latent ring forms; nearest-neighbor retrieval respects center proximity.
+
+                                                                           7. Repeat on 50–200 real clips; show banded confusion along fifths.
+
+                                                                           8. Add center-field head + center-loss → tighter clustering around correct centers.
+
+________________
+
+
+Notes specific to your T4 box
+                                                                              * Yes, CUDA matters: choose a PyTorch build that matches your driver/CUDA; prefer cu118 with driver ≥ 520.
+
+                                                                              * With N=720–1024, batch 16–32, AMP on, and small Conv-VAE, you fit comfortably in 16 GB VRAM.
+
+                                                                              * If tight: reduce batch, use AMP, compute torus on-the-fly, or drop to (N=720).
+
+________________
+
+
+
+
+Math detail:
+Center-Aware Interval Torus — Mathematical Notes (features, properties, and losses)
+Purpose
+We formalize the mathematics behind the feature set (log-CCF, CICV, Interval Torus, Center-Field), explain their invariances and inter-relations, derive useful identities (especially in Fourier form), and define loss terms and their proper combination for learning a latent “tonal-center space”.
+Notation and domain
+• θ ∈ [0,1): fractional octave (log-chroma) coordinate, i.e., θ(f) = frac(log2(f / fref)). Arithmetic on θ is modulo 1 (“circular”).
+• δ ∈ [0,1): interval size on the same circle (directed when on [0,1), unsigned when folded to [0,½]).
+• All integrals over θ or δ are on the unit circle with respect to the uniform measure; in discrete form, sums replace integrals.
+• p(θ) ≥ 0 denotes a probability density (continuous) or a probability mass function (discrete) on the circle: ∫0^1 p(θ)dθ = 1 (or ∑i p[i] = 1).
+• “⊕” denotes circular addition modulo 1.
+A. Logarithmic chroma density (log-CCF)
+Definition (continuous). Given any frequency-domain density pf(f) defined on a band, fold all octaves onto a reference octave via θ = frac(log2(f / fref)) and push forward the measure with its Jacobian:
+p(θ) ∝ ∑n pf(fref·2n+θ) · ∂θ(fref·2n+θ)
+= ∑n pf(fref·2n+θ) · (ln 2) fref·2n+θ.
+Normalize p so ∫ p = 1. (Sum over n only where the arguments are in-band.)
+Equivalent from linear-within-octave α ∈ [0,1): If f = fref(1+α)2n and you start from plin(α), then
+θ = log2(1+α) ∈ [0,1), α = 2θ − 1,
+p(θ) ∝ plin(2θ − 1) · (ln 2) · 2θ.
+Discrete grid. Choose N bins, θi = i/N. Treat p[i] as a probability mass (nonnegative, sum to 1). A small wrapped Gaussian or von Mises kernel can be used for smoothing.
+Key properties.
+• Rotation (transposition) by φ: pφ(θ) = p(θ ⊖ φ).
+• Inversion: pinv(θ) = p(−θ).
+• p is the basic, ambiguity-preserving chroma summary.
+B. Circular interval content (CICV)
+Definition (continuous). The CICV g is the circular autocorrelation of p:
+g(δ) = ∫0^1 p(θ) p(θ ⊕ δ) dθ, with ∫0^1 g(δ) dδ = 1.
+Discrete version. With p[i] a probability mass on {0,…,N−1}:
+g[k] = ∑i p[i] p[(i+k) mod N], and ∑k g[k] = 1.
+Symmetries and invariance.
+• Rotation-invariant: pφ ⇒ g unchanged (depends only on interval size δ).
+• If you “fold” to unsigned distances, define h(d) on d ∈ [0,½] by
+h(d) = g(d) + g(1−d) for 0 < d < ½; endpoints have measure zero (discrete: set h[0]=g[0], h[N/2]=g[N/2] when N even). Then ∫0½ h(d) dd = 1.
+Fourier (Wiener–Khinchin on the circle).
+Let p(θ) = ∑k ak e^{i2πkθ} (Fourier series). Then
+g(δ) = ∑k |ak|^2 e^{i2πkδ}.
+Consequences:
+• g depends only on |ak| (magnitudes).
+• “z-relation” (discrete pitch-class analog): different p with identical {|ak|} share the same g.
+C. Interval Torus (phase-preserving pair map)
+Definition. The “torus image” M is the joint mass of ordered pairs (anchor θ, partner θ⊕δ) under two independent draws from p:
+M(θ, δ) = p(θ) · p(θ ⊕ δ).
+Interpretations:
+• For each δ, the column M(·, δ) shows where intervals of size δ tend to originate around the circle; bright rows require both anchor and partner to be likely.
+• CICV is the θ-marginal of M: g(δ) = ∫ M(θ, δ) dθ (or ∑θ M[θ,δ]).
+Conditional anchor distribution given interval. When g(δ) > 0,
+p(θ | δ) = M(θ, δ) / g(δ) = p(θ) p(θ ⊕ δ) / g(δ).
+Numerically stable variant (discrete):
+p[θ | δ] = softmaxθ ( log p[θ] + log p[θ⊕δ] ), which is well-defined even when g is tiny.
+Rotation and inversion.
+• Rotation by φ acts only along the θ-axis: pφ ⇒ Mφ(θ, δ) = M(θ ⊖ φ, δ). Columns do not change; only row positions shift.
+• If desired, define the folded torus (interval-class torus) by summing columns δ and 1−δ (except endpoints).
+Fourier factorization of M (key identity).
+Let p(θ) = ∑k ak e^{i2πkθ}. Then
+p(θ) p(θ⊕δ) = ∑k,m ak am e^{i2π(k+m)θ} e^{i2π m δ}.
+Taking a 2-D Fourier transform over (θ, δ) with dual indices (u, v) ∈ ℤ×ℤ yields
+M̂(u, v) = a_{u−v} · a_v.
+Consequences:
+• The δ-marginal (fix v, sum/integrate over θ) collapses to |av|^2 (CICV spectrum).
+• M retains the phase structure of p via correlations among ak; CICV discards it.
+D. Center-Field (tonic saliency map)
+Definition. Choose a small, musically motivated kernel W on the circle that emphasizes stabilizing intervals around a center (e.g., narrow bumps at unison, 5th, 4th, ±3rds with decreasing weights). Define
+C(θ) = p(θ) · (W * p)(θ),
+where “*” is circular convolution: (W * p)(θ) = ∫ W(δ) p(θ ⊕ δ) dδ.
+Intuition: C(θ) is high where (i) the anchor has mass and (ii) its local neighborhood in interval space supports centricity.
+Circular statistics of the center-field.
+Define the first trigonometric moment (complex mean)
+m = ∫ e^{i2πθ} C(θ) dθ / ∫ C(θ) dθ,
+μ = arg m ∈ [0,1), ρ = |m| ∈ [0,1].
+• μ is the estimated center angle (on the circle).
+• ρ is a concentration/confidence measure (1 = perfectly concentrated, 0 = uniform).
+For discrete inputs, replace integrals with sums.
+Notes on W. W need not integrate to 1; scaling cancels when computing μ, ρ. If W is too peaky or overly weighted on a single interval, C can “grid-snap”; cross-validate W’s weights and widths.
+E. Relationships among the objects
+• M(θ, δ) = p(θ) p(θ⊕δ) (joint pair map).
+• g(δ) = ∫ M(θ, δ) dθ (interval marginal, rotation-invariant).
+• p(θ | δ) = M(θ, δ) / g(δ) (anchor distribution given interval).
+• C(θ) = p(θ) (W * p)(θ) (tonic saliency through weighted local interval support).
+• Fourier: g(δ) = ∑k |ak|^2 e^{i2πkδ}, and M̂(u, v) = a_{u−v} a_v.
+F. Losses (precise definitions, invariances, and roles)
+All distances below are defined on distributions living on the circle; integration is over the unit interval with wrap-around.
+F1. z-loss (interval content; transposition/inversion invariant)
+Purpose: penalize differences in interval distributions; be zero for z-related structures (same |ak|).
+Definition (L2 default):
+Lz(gp, gq) = ∫0^1 (gp(δ) − gq(δ))^2 dδ.
+Variants: Jensen–Shannon divergence on the circle; circular 1-Wasserstein (see below).
+Invariance: If q is a rotation (and optionally inversion) of p, then Lz = 0.
+Circular 1-Wasserstein remark. For probability measures on the circle, W1 can be computed by unwrapping at the best cut point (“circular optimal transport”); this sometimes better reflects small interval shifts than L2.
+F2. phase-loss (placement on the torus)
+Purpose: retain “where” intervals live (phase/placement) while factoring out transposition.
+Alignment. Let shiftφ be the circular shift of M along θ: (shiftφ Mq)(θ, δ) = Mq(θ ⊕ φ, δ). Choose φ∗ that minimizes a discrepancy:
+φ∗ = argminφ || Mp − shiftφ Mq ||^2 (Frobenius/L2 over θ,δ).
+Loss:
+Lphase(Mp, Mq) = minφ || Mp − shiftφ Mq ||^2.
+Optional inversion-invariance: also minimize over inversion (θ → −θ), taking the smaller value.
+Notes:
+• The argmin over φ can be found by circular cross-correlation or FFT-phase tricks; one may treat φ as an external alignment (no gradient through argmin), which is acceptable for training stability.
+• Fully differentiable alternative: represent shifts via Fourier rephasing (multiplying ak by e^{−i2πkφ}) and optimize φ as a continuous variable (small grid or a few quasi-Newton steps).
+F3. center-loss (explicit tonic geometry)
+Purpose: explicitly shape a “tonal-center space” using center-field statistics.
+Given Cp, Cq with (μp, ρp) and (μq, ρq), define the center distance on the circle by
+dcirc(μp, μq) = 1 − cos(2π(μp − μq)) ∈ [0,2].
+Weight by confidence (down-weight ambiguous cases):
+Lcenter = min(ρp, ρq) · dcirc(μp, μq).
+F4. VAE regularization and reconstruction
+Let q(z | x) be the encoder posterior (e.g., Gaussian with diagonal covariance) and p(z) the prior (e.g., standard normal).
+• KL term with warm-up: LKL = β · KL(q || p), with β ramped from 0 to a target over training (“KL annealing”).
+• Free-bits: enforce a minimum KL per latent dimension (e.g., 0.2 nats) to prevent posterior collapse.
+• Reconstruction term Lrec: defined in the same feature space as the input (e.g., L2 or cross-entropy on M or C or g, depending on which is reconstructed).
+G. Combining losses (total objective)
+For an input example x with features (targets) p, M, g, C and model predictions (decodes) M̂, ĝ, Ĉ (and possibly p̂), the per-sample objective can be:
+Ltotal = Lrec(M̂, M) (reconstruct the torus or chosen feature)
++ β · KL(q(z | x) || p(z)) (with warm-up and free-bits)
++ λz · Lz(ĝ, g) (interval content alignment)
++ λphase · Lphase(M̂align, Malign) (placement after best rotation)
++ λcenter · Lcenter(Ĉ, C). (explicit center geometry)
+Notes on usage and scheduling.
+• Start with λz ≈ λphase ≈ λcenter ≈ 1 (rescale by observed magnitudes); ramp λphase and λcenter only after reconstruction stabilizes, to avoid trivial minima.
+• If z-loss dominates, different p with the same g (z-related) may collapse; increase λphase to re-inject phase information.
+• If center-loss dominates, centers may “snap” to a grid; reduce kernel weights in W or add an entropy regularizer H(C) = −∫ Ĉ log Ĉ.
+H. Discrete vs continuous care
+• Normalization conventions. In the continuous case, g integrates to 1 when p integrates to 1. In the discrete (probability mass) case, ∑k g[k] = 1 as well. Verify numerically after each transform.
+• Endpoints in folding. For h(d) on [0,½], endpoints 0 and ½ have measure zero in continuous math; in discrete grids, handle h[0] and h[N/2] explicitly (no doubling).
+• Stability of p(θ | δ). Prefer the softmax log-sum-exp form; skip δ where g(δ) falls under a small threshold if you explicitly divide.
+I. How features respond to musical transformations
+• Transposition by φ:
+p → shiftφ p,
+g → unchanged,
+M → shiftφ along θ,
+C → shiftφ along θ,
+(μ, ρ) → (μ ⊕ φ, ρ).
+Loss implications: z-loss stays 0 under transposition; phase-loss should be computed after best θ-alignment; center-loss compares centers modulo circular distance.
+• Inversion:
+p(θ) → p(−θ),
+g → unchanged (if folded; slightly re-ordered if directed),
+M(θ, δ) → p(−θ) p(−θ ⊕ δ) = M(−θ, δ) (with appropriate column permutation if viewing δ as directed).
+If inversion invariance is desired, fold δ with 1−δ and minimize phase-loss over both orientations.
+J. Generative/sampling interpretations
+• Two independent draws X,Y ~ p produce an interval Δ = Y ⊖ X with density g(δ) (by definition).
+• Conditional anchor given an interval: p(θ | δ) ∝ p(θ) p(θ ⊕ δ).
+• For “anchored” synthesis from a particular F0:
+– Choose δ from a proposal (e.g., g) and optionally reweight it by context if you want conditioning;
+– Choose θ from p(θ | δ);
+– Map back to Hz as ftarget = f0 · 2^{m + δ} in log-chroma models (m ∈ ℤ selects the octave).
+K. Choice of distances on the circle (practical math)
+• L2: ∫ (a − b)^2 is simple and stable.
+• JS/KL: emphasize probabilistic calibration; ensure support overlap (smoothing helps).
+• 1-Wasserstein on S1: compute by unwrapping at the optimal cut (minimizing the usual 1D W1 over all cuts); more faithful when mass moves short distances on the circle.
+L. Why the torus matters (disambiguating z-relations)
+Because g(δ) depends only on {|ak|}, many distinct p share the same g (classic z-relation ambiguity). The torus M carries the missing phase via the identity M̂(u, v) = a_{u−v} a_v. Comparing full M (after rotation/inversion alignment) breaks the ambiguity without forfeiting transposition invariance (we align it away). In practice, z-loss encourages interval content agreement while phase-loss preserves where the intervals sit.
+M. Center-field as a principled tonic estimator
+The center-field C(θ) = p(θ) (W * p)(θ) rewards anchors that are both likely and surrounded by stabilizing intervals. Its first moment (μ, ρ) provides a continuous, uncertainty-aware estimate of center. When used in learning:
+• Lcenter shapes the latent geometry to reflect proximity of centers.
+• ρ automatically down-weights ambiguous cases and avoids penalizing musically undecidable fragments.
+N. Typical numerical scales and sanity checks
+• If p is normalized, then (continuous) ∫ g = 1 and (discrete) ∑ g[k] = 1.
+• Column-sum property: ∑θ M(θ, δ) = g(δ) exactly (check numerically).
+• If W is normalized to unit mass and p is not too spiky, ∫ C ≈ ∫ p (W * p) = (∫ p)(∫ W)(∫ p) = ∫ W ≈ constant; only the shape matters for (μ, ρ).
+• After rotating p by φ, (μ, ρ) should rotate by φ and keep ρ unchanged.
+O. Putting it together (compact recipe)
+                                                                                 1. Build p(θ) (log-chroma density) from audio or peaks; smooth lightly; normalize.
+
+                                                                                 2. Compute g(δ) via circular autocorrelation (iFFT of power spectrum); optionally fold.
+
+                                                                                 3. Construct M(θ, δ) = p(θ) p(θ ⊕ δ); verify g(δ) = ∫ M(θ, δ) dθ.
+
+                                                                                 4. Build C(θ) = p(θ) (W * p)(θ); compute (μ, ρ).
+
+                                                                                 5. Train a feature-level VAE with
+Ltotal = Lrec + βKL + λz Lz(ĝ, g) + λphase Lphase(M̂, M) + λcenter Lcenter(Ĉ, C),
+with θ-alignment in Lphase, and warm-up/free-bits for KL.
+
+                                                                                 6. Monitor that z/phase/center losses all decrease; that the learned latent places items with nearby μ close together; and that ambiguous items exhibit lower ρ and more diffuse placement.
+
+This document is self-contained and purely mathematical: it defines all features and their identities, states the symmetries/invariances, formalizes each loss and its role, and shows how to combine them coherently to learn a center-aware latent geometry.
+OFFLINE PIPELINE (SPACE→TIME TRADE)
+Goal
+Produce a set of frozen, versioned feature datasets that downstream training can consume without recomputing audio front-ends or FFTs. Artifacts are small enough to store widely (except the full torus; see below).
+Global IDs (for reproducibility)
+                                                                                    * audio_id: stable hash of audio bytes (or path+size+mtime).
+
+                                                                                    * cfg_id: hash of feature config (N, f_ref, smoothing kernel, fold flags, W weights, dtype).
+
+                                                                                    * code_id: short git commit of the feature builder.
+Store (audio_id, cfg_id, code_id) alongside every artifact.
+
+Artifacts to materialize (per clip)
+A0. Provenance file (JSON): audio path, sample rate, duration, (audio_id, cfg_id, code_id), split label.
+A1. Peaks/salience summary (optional): compressed lists of (frequency, weight) if you use a peak-based front end.
+A2. p(θ): log-CCF; shape (N,), dtype fp16 or fp32; sums to 1.
+A3. P[k]: complex Fourier series of p; shape (N,), dtype complex64 (or two fp32 arrays for Re/Im).
+A4. g(δ): CICV; shape (N,), dtype fp16/fp32; normalized to 1. Include both directed and folded forms if you need both.
+A5. C(θ): center-field; shape (N,), dtype fp16/fp32; plus scalar (μ, ρ).
+A6. Optional torus representation (choose ONE):
+• Preferred: NONE (rebuild on the fly when needed).
+• If you must persist something: store only P (already in A3). From P you can derive torus comparisons in Fourier (see losses). If visualization is required for a subset, store M in fp16 for those examples only.
+File format and layout
+                                                                                       * Use NPZ/NPY or Parquet/Arrow for simple columnar storage. For framewise variants, Zarr works well (chunk on time).
+
+                                                                                       * Directory template: datasets/{dataset_name}/{cfg_id}/{audio_id}/
+with files: p.npz, P.npz, g.npz, C.npz, mu_rho.json, provenance.json, (optional peaks.npz).
+
+                                                                                       * Keep a manifest CSV/JSON listing all items and the absolute path to each artifact.
+
+Disk budget (N=1024, per clip, fp32 unless noted)
+                                                                                          * p: ~4 KB; P: ~8 KB; g: ~4 KB; C: ~4 KB; (μ,ρ): 16 B → ~20 KB/clip.
+
+                                                                                          * Torus M fp16 (if stored): ~2 MB/clip → avoid globally; only store for visualization subsets.
+
+Acceptance checks (run once after building)
+                                                                                             * Rotation test: rotate audio by k semitones → p shifts by k/12, g unchanged.
+
+                                                                                             * Normalization test: sum(p)=1, sum(g)=1 (or integral≈1), column-sum identity holds when you reconstruct M on the fly.
+
+                                                                                             * Center-field sanity: single-center tones → high ρ; two-center mixtures → moderate ρ.
+
+                                                                                             * Versioning: manifests record (audio_id, cfg_id, code_id); identical inputs regenerate identical bytes.
+
+________________
+
+
+PRETRAINING / PREPROCESSING STRATEGY
+Why precompute?
+                                                                                                * Dramatically faster experiments: training reads small tensors (p, P, g, C, μ, ρ).
+
+                                                                                                * Enables curriculum: start with easy targets (g, C) before adding torus-phase detail.
+
+                                                                                                * Facilitates self-supervised tasks using transpositions/augmentations without re-running audio front-ends.
+
+Pretraining tasks (all testable on small subsets)
+PT1 — CICV prediction (interval content)
+                                                                                                   * Input: p (or a lightly augmented p).
+
+                                                                                                   * Target: g (from A4).
+
+                                                                                                   * Loss: Lz(ĝ, g) (L2 or JS).
+Goal: encoder learns interval-invariant structure first.
+
+PT2 — Center-field regression (tonic saliency)
+                                                                                                      * Input: p.
+
+                                                                                                      * Targets: C and (μ, ρ) (from A5).
+
+                                                                                                      * Loss: Lrec on C + center-loss on (μ, ρ).
+Goal: encoder aligns features with tonic geometry.
+
+PT3 — Phase-aware reconstruction (torus without storing M)
+                                                                                                         * Inputs/Targets: operate in Fourier using P (A3).
+
+                                                                                                         * Use the torus identity in frequency: M̂(u,v)=P[u−v]·P[v].
+
+                                                                                                         * Define a phase-aware discrepancy that compares P̂ vs P (magnitudes + aligned phase), or compute Lphase over a small grid of θ-shifts via rephasing (no spatial M needed).
+Goal: introduce placement (“where on the circle”) after PT1–PT2 converge.
+
+PT4 — Transposition-invariant contrastive pretraining (optional)
+                                                                                                            * Two “views” of the same clip: transposed p by random φ1 and φ2; optionally add detune/EQ augmentation.
+
+                                                                                                            * Positive if from same audio (any φ), negatives from different audio.
+
+                                                                                                            * Contrastive loss on latent after canonical alignment (e.g., rotate latent back by estimated μ).
+Goal: robust invariance, stronger use of latent.
+
+Curriculum schedule (small scale)
+Stage S1 (warm-start): PT1 + PT2 only, train until metrics stabilize on a tiny synthetic set; verify latent ring emerges and (μ, ρ) correlate with labels.
+Stage S2 (add placement): introduce PT3 with a small weight, increase as recon stabilizes.
+Stage S3 (optional): add PT4 to improve invariance and generalization, especially for diverse timbres.
+________________
+
+
+FINE-TUNING / FULL OBJECTIVE (WITH PRECOMPUTED TARGETS)
+Inputs to model (choose one path)
+                                                                                                               * 1D path: g(δ) and/or C(θ) as primary inputs for a small 1D Conv-VAE (fastest).
+
+                                                                                                               * 2D path: reconstruct M indirectly via P (recommended): decode P̂, then evaluate losses on ĝ (from |P̂|²) and on phase via rephasing; decode Ĉ from p̂ if the decoder also predicts p̂.
+
+Total loss (per sample)
+Ltotal = Lrec(feature)
++ β·KL (with warm-up and free-bits)
++ λz·Lz(ĝ, g)
++ λphase·Lphase(P̂, P) [phase via Fourier/rephasing, no M stored]
++ λcenter·Lcenter((μ̂,ρ̂), (μ,ρ)).
+Notes
+                                                                                                                  * Start with λz≈λcenter≈1, λphase small; increase λphase once Lrec is stable.
+
+                                                                                                                  * If you prefer to reconstruct M explicitly for a subset, build M on the fly from p (outer products of shifts), not from disk.
+
+________________
+
+
+DATASETS & SPLITS (OFFLINE)
+Manifests
+                                                                                                                     * One row per clip: paths to A2–A5, split label (train/val/test), metadata (tempo/style/artist).
+
+                                                                                                                     * For each clip, optionally list transposed variants (so you can define positives for contrastive tasks).
+
+Splits
+                                                                                                                        * Track/artist-disjoint splits to avoid leakage.
+
+                                                                                                                        * Keep transposition variants in the same split as their source.
+
+Augmentations (applied to precomputed features, not audio)
+                                                                                                                           * Circular shifts of p by random φ (models transposition).
+
+                                                                                                                           * Small phase jitter on P to simulate slight detuning.
+
+                                                                                                                           * Mixup of p with another p (for ambiguous center training).
+
+________________
+
+
+SERVER IMPLICATIONS (T4)
+                                                                                                                              * Nothing in the precompute plan requires special CUDA beyond your normal training. It reduces GPU load because feature tensors are tiny; your T4 is more than enough.
+
+                                                                                                                              * Use FP16 on disk for p, g, C to save space; cast to FP32 in memory if needed.
+
+                                                                                                                              * Dataloaders can memory-map NPY/NPZ or stream from Zarr; use pinned memory for transfer.
+
+________________
+
+
+PITFALLS & SAFEGUARDS (OFFLINE DATASETS)
+                                                                                                                                 * Staleness: bump cfg_id or code_id when you change N, smoothing, W, or front-end; never mix datasets with different cfg_id in the same run.
+
+                                                                                                                                 * Label drift: if you relabel (μ, ρ) due to updated W, only A5 must be rebuilt; A2–A4 stay valid.
+
+                                                                                                                                 * Storage growth: do not persist M globally; store P and derive torus-related terms in Fourier for losses/visuals.
+
+                                                                                                                                 * Evaluation leakage: ensure transposed copies of a track do not cross splits.
+
+________________
+
+
+MINI ACCEPTANCE PLAN (END-TO-END, NO CODE)
+                                                                                                                                    1. Build a 100-item synthetic dataset to A2–A5; verify invariances and normalization.
+
+                                                                                                                                    2. Run PT1+PT2 pretraining on this frozen dataset; observe: z-loss ↓, center-loss ↓, latent ring forms, (μ̂, ρ̂) correlate with targets.
+
+                                                                                                                                    3. Add PT3 (phase) using P only; observe phase discrepancy ↓ without storing M.
+
+                                                                                                                                    4. Move to a 50–200 clip real set; show nearest-neighbor retrieval aligns with center proximity; near-miss pattern banded along fifths.
+
+                                                                                                                                    5. Freeze this dataset version; document cfg_id, code_id, and all metrics.

@@ -5,7 +5,7 @@ from pathlib import Path
 import numpy as np
 
 from ccf_key_detector.app import FrameResult, RunnerConfig, create_runner
-from ccf_key_detector.features_ccf import CCFConfig
+from ccf_key_detector.features import CCFConfig
 from ccf_key_detector.prefilter import PreFilterConfig
 
 SAMPLE_RATE = 48_000

@@ -1,4 +1,6 @@
 import struct
+from typing import List, Tuple, Union
+
 import numpy as np
 
 from ccf_key_detector.rt_viz import (
@@ -94,7 +96,7 @@ def test_osc_visualizer_transmits_packet(monkeypatch) -> None:
         def setblocking(self, flag: bool) -> None:
             self.flag = flag
 
-        def sendto(self, data: bytes, endpoint: tuple[str, int]) -> int:
+        def sendto(self, data: bytes, endpoint: Tuple[str, int]) -> int:
             sent_packets.append((data, endpoint))
             return len(data)
 
@@ -139,7 +141,7 @@ def test_osc_ske_visualizer_uses_distribution(monkeypatch) -> None:
         def setblocking(self, flag: bool) -> None:
             pass
 
-        def sendto(self, data: bytes, endpoint: tuple[str, int]) -> int:
+        def sendto(self, data: bytes, endpoint: Tuple[str, int]) -> int:
             sent_packets.append((data, endpoint))
             return len(data)
 
@@ -175,8 +177,8 @@ def test_osc_ske_visualizer_uses_distribution(monkeypatch) -> None:
     visualizer.close()
 
 
-def _decode_osc(packet: bytes) -> tuple[str, str, list[float | int]]:
-    def _read_string(offset: int) -> tuple[str, int]:
+def _decode_osc(packet: bytes) -> Tuple[str, str, List[Union[float, int]]]:
+    def _read_string(offset: int) -> Tuple[str, int]:
         end = packet.index(b"\x00", offset)
         value = packet[offset:end].decode("utf-8")
         padded = (end + 4) & ~0x03
@@ -185,7 +187,7 @@ def _decode_osc(packet: bytes) -> tuple[str, str, list[float | int]]:
     cursor = 0
     address, cursor = _read_string(cursor)
     tags, cursor = _read_string(cursor)
-    values: list[float | int] = []
+    values: List[Union[float, int]] = []
     for tag in tags[1:]:
         if tag == "i":
             (value,) = struct.unpack_from(">i", packet, cursor)

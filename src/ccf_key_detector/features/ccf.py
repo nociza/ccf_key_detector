@@ -1,23 +1,10 @@
-"""Continuous chroma feature extraction.
-
-The implementation below follows these steps for each PCM frame:
-
-1. Window the mono samples and obtain an FFT-derived magnitude spectrum.
-2. Wrap every positive frequency bin onto the log2 cycle relative to 220 Hz.
-3. Distribute spectral energy across a configurable number of circular bins using
-   linear interpolation so that octave-equivalent partials reinforce each other.
-4. Apply optional circular Gaussian smoothing and normalise the result to a PDF.
-
-Diagnostics such as RMS level and spectral flatness are returned alongside the
-probability vector so higher layers can decide whether to treat the frame as a
-confident tonal observation.
-"""
+"""Continuous chroma feature extraction utilities."""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 from functools import lru_cache
-from typing import Dict, Protocol, Tuple
+from typing import Dict, Protocol, Sequence, Tuple
 
 import numpy as np
 
@@ -52,7 +39,7 @@ class CCFExtractor(Protocol):
 
     config: CCFConfig
 
-    def compute(self, frame: memoryview, sample_rate: int) -> Tuple[list[float], Dict[str, float]]:
+    def compute(self, frame: Sequence[float] | memoryview | np.ndarray, sample_rate: int) -> Tuple[list[float], Dict[str, float]]:
         """Return a PDF on the unit log-frequency cycle plus diagnostics."""
 
 
@@ -62,7 +49,7 @@ class _CCFExtractor:
     def __init__(self, config: CCFConfig) -> None:
         self.config = config
 
-    def compute(self, frame: memoryview, sample_rate: int) -> Tuple[list[float], Dict[str, float]]:
+    def compute(self, frame: Sequence[float] | memoryview | np.ndarray, sample_rate: int) -> Tuple[list[float], Dict[str, float]]:
         if sample_rate <= 0:
             raise ValueError("sample_rate must be positive")
 
@@ -70,7 +57,6 @@ class _CCFExtractor:
         if samples.ndim != 1:
             raise ValueError("CCF extractor expects a 1-D mono frame")
 
-        # Promote to float64 for better numerical accuracy during FFT.
         mono = samples.astype(np.float64, copy=False)
         fft_size = mono.size
         if fft_size == 0:
@@ -82,7 +68,6 @@ class _CCFExtractor:
         magnitudes = np.abs(spectrum)
         power = magnitudes**2
 
-        # Remove the DC component; it does not carry tonal information.
         if power.size:
             power[0] = 0.0
 
@@ -126,7 +111,7 @@ class _CCFExtractor:
         }
 
 
-def _as_float32(frame: memoryview) -> np.ndarray:
+def _as_float32(frame: Sequence[float] | memoryview | np.ndarray) -> np.ndarray:
     """Convert an arbitrary buffer into a 1-D float32 NumPy array."""
 
     if isinstance(frame, np.ndarray):
@@ -138,10 +123,8 @@ def _as_float32(frame: memoryview) -> np.ndarray:
             return np.frombuffer(frame, dtype=np.float32)
         if frame.format in {"d", "g"} and is_contiguous:
             return np.frombuffer(frame, dtype=np.float64).astype(np.float32)
-        # Fallback handles non-contiguous views or alternate sample formats.
         return np.array(frame.tolist(), dtype=np.float32)
 
-    # Fall back to NumPy's conversion for other sequence types.
     return np.asarray(frame, dtype=np.float32)
 
 
@@ -154,7 +137,7 @@ def _window(name: str, size: int) -> np.ndarray:
         win = np.hanning(size)
     elif name_lc == "blackman":
         win = np.blackman(size)
-    elif name_lc == "rect" or name_lc == "rectangular":
+    elif name_lc in {"rect", "rectangular"}:
         win = np.ones(size, dtype=np.float64)
     else:
         raise ValueError(f"Unsupported window: {name}")
@@ -207,7 +190,6 @@ def _project_to_cycle(
     np.add.at(pdf, lower_idx, power * (1.0 - fractions))
     np.add.at(pdf, upper_idx, power * fractions)
 
-    # Energy may accumulate to zero if all power bins are zero.
     if np.allclose(pdf, 0.0):
         return _uniform_pdf(n_bins)
     return pdf

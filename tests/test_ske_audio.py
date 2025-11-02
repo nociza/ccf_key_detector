@@ -2,7 +2,7 @@ import math
 
 import numpy as np
 
-from ccf_key_detector.features_ccf import CCFConfig, create_extractor
+from ccf_key_detector.features import CCFConfig, create_extractor
 from ccf_key_detector.ske import SKEBackend, SKEConfig, create_ske, reduce_cycle
 from ccf_key_detector.ske.kk_major import KK_MAJOR_PROFILE
 

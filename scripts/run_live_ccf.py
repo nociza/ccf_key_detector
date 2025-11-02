@@ -5,9 +5,15 @@ from __future__ import annotations
 
 import argparse
 import signal
+import sys
 from dataclasses import replace
 from pathlib import Path
 from typing import Optional
+
+_REPO_ROOT = Path(__file__).resolve().parents[1]
+_SRC_DIR = _REPO_ROOT / "src"
+if _SRC_DIR.exists():
+    sys.path.insert(0, str(_SRC_DIR))
 
 import numpy as np
 
@@ -30,6 +36,31 @@ def _parse_device(raw: Optional[str]) -> Optional[int | str]:
         return raw
 
 
+def _parse_viz_mode(raw: str) -> VisualizationMode:
+    value = raw.lower()
+    for mode in VisualizationMode:
+        if mode.value == value:
+            return mode
+    alias_map = {
+        "osc_ccf": "OSC_CCF",
+        "osc_ske_dist": "OSC_SKE_DIST",
+    }
+    if value in alias_map:
+        member = alias_map[value]
+        if hasattr(VisualizationMode, member):
+            return getattr(VisualizationMode, member)
+        raise argparse.ArgumentTypeError(
+            (
+                f"Visualization mode '{raw}' is not available in this build. "
+                "Please reinstall the project to get OSC streaming support."
+            )
+        )
+    valid = [mode.value for mode in VisualizationMode]
+    raise argparse.ArgumentTypeError(
+        f"Unsupported viz-mode '{raw}'. Valid options: {', '.join(valid)}"
+    )
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--audio-file", type=Path, help="Optional WAV file for offline playback")
@@ -41,8 +72,8 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--viz-mode",
-        choices=[mode.value for mode in VisualizationMode],
-        default=VisualizationMode.LINEAR.value,
+        type=_parse_viz_mode,
+        default=VisualizationMode.LINEAR,
         help="Visualization mode",
     )
     parser.add_argument(
@@ -138,7 +169,7 @@ def main() -> None:
     runner = create_runner(runner_config)
 
     viz_config = VisualizationConfig(
-        mode=VisualizationMode(args.viz_mode),
+        mode=args.viz_mode,
         window_hops=args.window_hops,
         tail_length=args.tail_length,
         render=not args.headless,

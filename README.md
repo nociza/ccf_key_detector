@@ -1,6 +1,6 @@
 tldr: 
 
-STEP 0: get the dependencies sorted out
+STEP 0: set up the virtual environment (`python -m venv .venv && source .venv/bin/activate && pip install -e .[dev]`)
 STEP 1: run
 python scripts/run_live_ccf.py --viz-mode osc_ccf
 or
@@ -30,12 +30,16 @@ This project implements a realtime tonal-center estimator built on a continuous 
 src/ccf_key_detector/
   audio_io/        # Input abstraction, WAV loading, linear resampling
   prefilter/       # Deterministic filters (bypass/high-pass)
-  features_ccf/    # Continuous chroma feature extractor
+  features/        # Continuous chroma, CICV, torus, center-field builders
   transpose/       # Circular shift operator and tonal scan helpers
   ske/             # Single-key evaluator implementations
+  losses/          # Interval, phase, and centre-aware losses
+  models/          # Small Conv-VAE and latent heads
+  data/            # Datasets and synthetic generators
+  train/           # Training harnesses / scripts
+  eval/            # Baselines and metrics (placeholders for now)
   rt_viz/          # Realtime visualization back ends
   app/             # Runner that stitches the full pipeline together
-config/            # Runtime configuration dataclasses
 scripts/           # CLI utilities and demo scripts
 tests/             # Pytest-based regression and behaviour checks
 ```
@@ -46,6 +50,16 @@ tests/             # Pytest-based regression and behaviour checks
 python -m venv .venv
 source .venv/bin/activate
 pip install -e .[dev]
+```
+
+On the target T4 server (Ubuntu 22.04, CUDA 11.4, driver 470.223.02) install a
+matching PyTorch build before the editable install, for example:
+
+```bash
+python3 -m pip install --upgrade pip
+python3 -m pip install torch==1.13.1+cu116 torchvision==0.14.1+cu116 \
+    --extra-index-url https://download.pytorch.org/whl/cu116
+python3 -m pip install -e .[dev]
 ```
 
 Python 3.10 or newer is required. The realtime pipeline relies on PortAudio via `sounddevice`; install the appropriate system packages if you plan to use live capture. Visualization modes that open a window depend on `pyqtgraph`, `PyQt5`, and `PyOpenGL`.
@@ -70,8 +84,19 @@ Python 3.10 or newer is required. The realtime pipeline relies on PortAudio via 
   ```bash
   PYTHONPATH=src python scripts/run_live_ccf.py --viz-mode polar_single
   ```
+- Kick off a minimal VAE training smoke test (CPU friendly):
+  ```bash
+  PYTHONPATH=src python -m ccf_key_detector.train.train_small data/VocalSet \
+      --epochs 1 --batch-size 4 --max-steps 10
+  ```
 
 Generated artefacts land in `build/` and are excluded from version control.
+
+## Datasets
+
+Place raw audio corpora under `data/`. The default experiments assume
+VocalSet is unpacked to `data/VocalSet`. The feature dataset loader slices
+windows on the fly—no separate preprocessing step is required.
 
 ### Command Reference
 
@@ -97,6 +122,9 @@ Generated artefacts land in `build/` and are excluded from version control.
 - `--smoothing`: Smoothing sigma in bins.
 - `--frame-length`: Analysis window length (seconds).
 - `--sample-rate`: Target sample rate (linear resampling if the source differs).
+
+**`test_half_diminished_features.py`**
+- Visualises log-CCF, CICV, interval torus, and center-field for a synthetic half-diminished seventh chord.
 
 **`run_live_ccf.py`**
 - `--audio-file`: Optional WAV file for offline playback; omit to use a live input device.

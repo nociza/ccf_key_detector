@@ -23,7 +23,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 
-from ccf_key_detector.features_ccf import CCFConfig, create_extractor
+from ccf_key_detector.features import CCFConfig, create_extractor
 
 
 DEFAULT_TONES = (250.0, 300.0, 440.0)
