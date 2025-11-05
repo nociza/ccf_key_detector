@@ -38,4 +38,19 @@ def test_train_small_runs(tmp_path: Path) -> None:
         device="cpu",
     )
 
-    train_small(training_cfg)
+    artifacts = train_small(training_cfg, return_state=True, record_history=True)
+    assert artifacts is not None
+    assert artifacts.history is not None
+    assert len(artifacts.history) == 1
+
+    fine_tune_cfg = TrainingConfig(
+        dataset_root=tmp_path,
+        feature=feature_cfg,
+        model=training_cfg.model,
+        batch_size=2,
+        num_epochs=1,
+        lr=1e-3,
+        max_steps_per_epoch=1,
+        device="cpu",
+    )
+    train_small(fine_tune_cfg, state=artifacts.state)

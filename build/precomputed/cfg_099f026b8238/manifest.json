@@ -1,0 +1,1146 @@
+{
+  "cfg_id": "099f026b8238",
+  "config": {
+    "sample_rate": 48000,
+    "frame_length_sec": 1.5,
+    "hop_length_sec": 1.5,
+    "ccf": {
+      "n_bins": 180,
+      "f_ref_hz": 220.0,
+      "smoothing_sigma_bins": 1.0,
+      "window": "hann",
+      "silence_rms_floor": 1e-06
+    },
+    "center": {
+      "intervals": [
+        [
+          0.0,
+          1.0
+        ],
+        [
+          0.5849625007211562,
+          0.8
+        ],
+        [
+          0.4150374992788438,
+          0.6
+        ],
+        [
+          0.32192809488736235,
+          0.35
+        ],
+        [
+          0.2630344058337938,
+          0.3
+        ]
+      ],
+      "kernel_sigma_bins": 3.0
+    },
+    "include_torus": true,
+    "include_folded_cicv": true,
+    "store_pdf": true
+  },
+  "audio_root": "/Users/thomasc.pan/Documents/CCF key detector /build/synthetic_stage_s1",
+  "entries": [
+    {
+      "audio": "detuned_fifth_000.wav",
+      "features": "detuned_fifth_000.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "detuned_fifth_009.wav",
+      "features": "detuned_fifth_009.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "detuned_fifth_021.wav",
+      "features": "detuned_fifth_021.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "detuned_fifth_025.wav",
+      "features": "detuned_fifth_025.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "detuned_fifth_030.wav",
+      "features": "detuned_fifth_030.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "detuned_fifth_033.wav",
+      "features": "detuned_fifth_033.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "detuned_fifth_054.wav",
+      "features": "detuned_fifth_054.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "detuned_fifth_060.wav",
+      "features": "detuned_fifth_060.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "detuned_fifth_064.wav",
+      "features": "detuned_fifth_064.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "detuned_fifth_068.wav",
+      "features": "detuned_fifth_068.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "detuned_fifth_075.wav",
+      "features": "detuned_fifth_075.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "detuned_fifth_091.wav",
+      "features": "detuned_fifth_091.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "detuned_fifth_099.wav",
+      "features": "detuned_fifth_099.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "dom7_001.wav",
+      "features": "dom7_001.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "dom7_010.wav",
+      "features": "dom7_010.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "dom7_013.wav",
+      "features": "dom7_013.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "dom7_016.wav",
+      "features": "dom7_016.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "dom7_022.wav",
+      "features": "dom7_022.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "dom7_045.wav",
+      "features": "dom7_045.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "dom7_047.wav",
+      "features": "dom7_047.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "dom7_049.wav",
+      "features": "dom7_049.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "dom7_057.wav",
+      "features": "dom7_057.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "dom7_059.wav",
+      "features": "dom7_059.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "dom7_061.wav",
+      "features": "dom7_061.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "dom7_080.wav",
+      "features": "dom7_080.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "dom7_095.wav",
+      "features": "dom7_095.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "fifth_003.wav",
+      "features": "fifth_003.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "fifth_020.wav",
+      "features": "fifth_020.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "fifth_037.wav",
+      "features": "fifth_037.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "fifth_048.wav",
+      "features": "fifth_048.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "fifth_082.wav",
+      "features": "fifth_082.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "fifth_092.wav",
+      "features": "fifth_092.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "fifth_093.wav",
+      "features": "fifth_093.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "fourth_004.wav",
+      "features": "fourth_004.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "fourth_024.wav",
+      "features": "fourth_024.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "fourth_051.wav",
+      "features": "fourth_051.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "fourth_056.wav",
+      "features": "fourth_056.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "fourth_063.wav",
+      "features": "fourth_063.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "fourth_070.wav",
+      "features": "fourth_070.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "fourth_071.wav",
+      "features": "fourth_071.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "fourth_079.wav",
+      "features": "fourth_079.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "fourth_083.wav",
+      "features": "fourth_083.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "fourth_087.wav",
+      "features": "fourth_087.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "fourth_089.wav",
+      "features": "fourth_089.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "fourth_090.wav",
+      "features": "fourth_090.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "fourth_098.wav",
+      "features": "fourth_098.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "half_dim7_015.wav",
+      "features": "half_dim7_015.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "half_dim7_028.wav",
+      "features": "half_dim7_028.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "half_dim7_029.wav",
+      "features": "half_dim7_029.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "half_dim7_050.wav",
+      "features": "half_dim7_050.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "half_dim7_062.wav",
+      "features": "half_dim7_062.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "half_dim7_067.wav",
+      "features": "half_dim7_067.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "half_dim7_074.wav",
+      "features": "half_dim7_074.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "half_dim7_084.wav",
+      "features": "half_dim7_084.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "half_dim7_088.wav",
+      "features": "half_dim7_088.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "half_dim7_094.wav",
+      "features": "half_dim7_094.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "major_tri_038.wav",
+      "features": "major_tri_038.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "major_tri_039.wav",
+      "features": "major_tri_039.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "major_tri_040.wav",
+      "features": "major_tri_040.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "major_tri_052.wav",
+      "features": "major_tri_052.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "major_tri_072.wav",
+      "features": "major_tri_072.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "major_tri_073.wav",
+      "features": "major_tri_073.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "minor_tri_002.wav",
+      "features": "minor_tri_002.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "minor_tri_012.wav",
+      "features": "minor_tri_012.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "minor_tri_017.wav",
+      "features": "minor_tri_017.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "minor_tri_018.wav",
+      "features": "minor_tri_018.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "minor_tri_026.wav",
+      "features": "minor_tri_026.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "minor_tri_035.wav",
+      "features": "minor_tri_035.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "minor_tri_046.wav",
+      "features": "minor_tri_046.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "minor_tri_066.wav",
+      "features": "minor_tri_066.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "minor_tri_069.wav",
+      "features": "minor_tri_069.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "minor_tri_078.wav",
+      "features": "minor_tri_078.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "minor_tri_081.wav",
+      "features": "minor_tri_081.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "minor_tri_085.wav",
+      "features": "minor_tri_085.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "minor_tri_086.wav",
+      "features": "minor_tri_086.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "noisy_major_011.wav",
+      "features": "noisy_major_011.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "noisy_major_014.wav",
+      "features": "noisy_major_014.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "noisy_major_019.wav",
+      "features": "noisy_major_019.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "noisy_major_053.wav",
+      "features": "noisy_major_053.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "noisy_major_055.wav",
+      "features": "noisy_major_055.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "noisy_major_058.wav",
+      "features": "noisy_major_058.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "noisy_major_077.wav",
+      "features": "noisy_major_077.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "octave_A4_008.wav",
+      "features": "octave_A4_008.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "octave_A4_031.wav",
+      "features": "octave_A4_031.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "octave_A4_043.wav",
+      "features": "octave_A4_043.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "octave_A4_065.wav",
+      "features": "octave_A4_065.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "single_A3_005.wav",
+      "features": "single_A3_005.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "single_A3_006.wav",
+      "features": "single_A3_006.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "single_A3_007.wav",
+      "features": "single_A3_007.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "single_A3_023.wav",
+      "features": "single_A3_023.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "single_A3_027.wav",
+      "features": "single_A3_027.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "single_A3_032.wav",
+      "features": "single_A3_032.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "single_A3_034.wav",
+      "features": "single_A3_034.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "single_A3_036.wav",
+      "features": "single_A3_036.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "single_A3_041.wav",
+      "features": "single_A3_041.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "single_A3_042.wav",
+      "features": "single_A3_042.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "single_A3_044.wav",
+      "features": "single_A3_044.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "single_A3_076.wav",
+      "features": "single_A3_076.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "single_A3_096.wav",
+      "features": "single_A3_096.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "single_A3_097.wav",
+      "features": "single_A3_097.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    }
+  ]
+}

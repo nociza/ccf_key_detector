@@ -23,6 +23,12 @@ class CenterFieldConfig:
     intervals: Tuple[Tuple[float, float], ...] = _DEFAULT_INTERVALS
     kernel_sigma_bins: float = 3.0
 
+    def to_dict(self) -> dict:
+        return {
+            "intervals": [[float(pos), float(weight)] for (pos, weight) in self.intervals],
+            "kernel_sigma_bins": float(self.kernel_sigma_bins),
+        }
+
 
 def center_field(pdf: np.ndarray, config: CenterFieldConfig | None = None) -> Tuple[np.ndarray, float, float]:
     """Compute the center-field ``C(θ) = p(θ) (W * p)(θ)`` and circular stats.

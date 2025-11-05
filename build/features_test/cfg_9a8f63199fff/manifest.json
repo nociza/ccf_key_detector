@@ -1,0 +1,68 @@
+{
+  "cfg_id": "9a8f63199fff",
+  "config": {
+    "sample_rate": 48000,
+    "frame_length_sec": 1.5,
+    "hop_length_sec": 1.5,
+    "ccf": {
+      "n_bins": 120,
+      "f_ref_hz": 220.0,
+      "smoothing_sigma_bins": 1.0,
+      "window": "hann",
+      "silence_rms_floor": 1e-06
+    },
+    "center": {
+      "intervals": [
+        [
+          0.0,
+          1.0
+        ],
+        [
+          0.5849625007211562,
+          0.8
+        ],
+        [
+          0.4150374992788438,
+          0.6
+        ],
+        [
+          0.32192809488736235,
+          0.35
+        ],
+        [
+          0.2630344058337938,
+          0.3
+        ]
+      ],
+      "kernel_sigma_bins": 3.0
+    },
+    "include_torus": true,
+    "include_folded_cicv": true,
+    "store_pdf": true
+  },
+  "audio_root": "/Users/thomasc.pan/Documents/CCF key detector /build/synthetic_stage_s1",
+  "entries": [
+    {
+      "audio": "detuned_fifth_000.wav",
+      "features": "detuned_fifth_000.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    },
+    {
+      "audio": "detuned_fifth_009.wav",
+      "features": "detuned_fifth_009.npz",
+      "n_frames": 1,
+      "sample_rate": 48000,
+      "frame_length_sec": 1.5,
+      "hop_length_sec": 1.5,
+      "starts": [
+        0
+      ]
+    }
+  ]
+}

@@ -33,6 +33,15 @@ class CCFConfig:
         if self.silence_rms_floor <= 0:
             raise ValueError("silence_rms_floor must be positive")
 
+    def to_dict(self) -> Dict[str, float | int | str]:
+        return {
+            "n_bins": self.n_bins,
+            "f_ref_hz": self.f_ref_hz,
+            "smoothing_sigma_bins": self.smoothing_sigma_bins,
+            "window": self.window,
+            "silence_rms_floor": self.silence_rms_floor,
+        }
+
 
 class CCFExtractor(Protocol):
     """Protocol describing the continuous chroma feature extractor."""

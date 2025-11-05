@@ -106,6 +106,7 @@ class VocalFeatureDataset(Dataset):
                 "start": start,
                 "sample_rate": self.config.sample_rate,
             },
+            "diagnostics": diagnostics,
         }
 
         if self.config.include_torus:

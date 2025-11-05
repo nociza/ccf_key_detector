@@ -2,8 +2,12 @@
 
 from __future__ import annotations
 
+from typing import Sequence, TYPE_CHECKING
+
 import numpy as np
 
+if TYPE_CHECKING:  # pragma: no cover
+    import torch
 
 def build_torus(pdf: np.ndarray) -> np.ndarray:
     """Construct the interval torus ``M(θ, δ) = p(θ) p(θ ⊕ δ)``."""
@@ -37,3 +41,21 @@ def rotate_torus(torus: np.ndarray, shift: int) -> np.ndarray:
     if torus.ndim != 2 or torus.shape[0] != torus.shape[1]:
         raise ValueError("torus must be a square matrix")
     return np.roll(torus, -shift % torus.shape[0], axis=0)
+
+
+def build_torus_torch(pdf: "torch.Tensor") -> "torch.Tensor":
+    """Torch variant of :func:`build_torus` retaining gradients."""
+
+    import torch  # Lazy import to keep numpy-only environments lightweight
+
+    if pdf.ndim == 1:
+        pdf = pdf.unsqueeze(0)
+    if pdf.ndim != 2:
+        raise ValueError("pdf must be 1-D or 2-D tensor")
+    batch, n_bins = pdf.shape
+    torus_columns: Sequence[torch.Tensor] = [
+        torch.roll(pdf, shifts=-delta, dims=1) for delta in range(n_bins)
+    ]
+    rolled = torch.stack(torus_columns, dim=1)  # (batch, n_bins, n_bins)
+    torus = pdf.unsqueeze(1) * rolled
+    return torus

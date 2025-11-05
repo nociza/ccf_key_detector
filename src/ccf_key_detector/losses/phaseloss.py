@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+from typing import Sequence
+
 import numpy as np
+import torch
 
 
 def phase_loss(
@@ -43,4 +46,36 @@ def phase_loss(
     return best
 
 
-__all__ = ["phase_loss"]
+def phase_loss_torch(
+    torus_a: torch.Tensor,
+    torus_b: torch.Tensor,
+    *,
+    allow_inversion: bool = False,
+) -> torch.Tensor:
+    """Torch-compatible version of :func:`phase_loss` supporting autograd."""
+
+    if torus_a.shape != torus_b.shape:
+        raise ValueError("torus_a and torus_b must share the same shape")
+    if torus_a.ndim == 2:
+        torus_a = torus_a.unsqueeze(0)
+        torus_b = torus_b.unsqueeze(0)
+    if torus_a.ndim != 3:
+        raise ValueError("Torus tensors must be 2-D or 3-D")
+
+    _, n_bins, _ = torus_a.shape
+    losses: Sequence[torch.Tensor] = []
+
+    for shift in range(n_bins):
+        rolled = torch.roll(torus_b, shifts=-shift, dims=1)
+        diff = (torus_a - rolled) ** 2
+        losses.append(diff.sum(dim=(1, 2)))
+        if allow_inversion:
+            flipped = torch.flip(rolled, dims=[1])
+            diff_inv = (torus_a - flipped) ** 2
+            losses.append(diff_inv.sum(dim=(1, 2)))
+
+    stacked = torch.stack(losses, dim=0)
+    return stacked.min(dim=0).values.mean()
+
+
+__all__ = ["phase_loss", "phase_loss_torch"]

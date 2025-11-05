@@ -1,0 +1,1108 @@
+{
+  "snippets": [
+    {
+      "label": "detuned_fifth_000",
+      "tones": [
+        220.0,
+        330.0
+      ],
+      "detune_cents": [
+        0.0,
+        35.0
+      ],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "dom7_001",
+      "tones": [
+        220.0,
+        275.0,
+        330.0,
+        412.5
+      ],
+      "detune_cents": [],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "minor_tri_002",
+      "tones": [
+        220.0,
+        264.0,
+        330.0
+      ],
+      "detune_cents": [],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "fifth_003",
+      "tones": [
+        220.0,
+        330.0
+      ],
+      "detune_cents": [],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "fourth_004",
+      "tones": [
+        220.0,
+        293.3333333333333
+      ],
+      "detune_cents": [],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "single_A3_005",
+      "tones": [
+        220.0
+      ],
+      "detune_cents": [],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "single_A3_006",
+      "tones": [
+        220.0
+      ],
+      "detune_cents": [],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "single_A3_007",
+      "tones": [
+        220.0
+      ],
+      "detune_cents": [],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "octave_A4_008",
+      "tones": [
+        220.0,
+        440.0
+      ],
+      "detune_cents": [],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "detuned_fifth_009",
+      "tones": [
+        220.0,
+        330.0
+      ],
+      "detune_cents": [
+        0.0,
+        35.0
+      ],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "dom7_010",
+      "tones": [
+        220.0,
+        275.0,
+        330.0,
+        412.5
+      ],
+      "detune_cents": [],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "noisy_major_011",
+      "tones": [
+        220.0,
+        275.0,
+        330.0
+      ],
+      "detune_cents": [],
+      "add_noise": true,
+      "amplitude": 0.3
+    },
+    {
+      "label": "minor_tri_012",
+      "tones": [
+        220.0,
+        264.0,
+        330.0
+      ],
+      "detune_cents": [],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "dom7_013",
+      "tones": [
+        220.0,
+        275.0,
+        330.0,
+        412.5
+      ],
+      "detune_cents": [],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "noisy_major_014",
+      "tones": [
+        220.0,
+        275.0,
+        330.0
+      ],
+      "detune_cents": [],
+      "add_noise": true,
+      "amplitude": 0.3
+    },
+    {
+      "label": "half_dim7_015",
+      "tones": [
+        220.0,
+        264.0,
+        311.1269837220809,
+        412.5
+      ],
+      "detune_cents": [],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "dom7_016",
+      "tones": [
+        220.0,
+        275.0,
+        330.0,
+        412.5
+      ],
+      "detune_cents": [],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "minor_tri_017",
+      "tones": [
+        220.0,
+        264.0,
+        330.0
+      ],
+      "detune_cents": [],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "minor_tri_018",
+      "tones": [
+        220.0,
+        264.0,
+        330.0
+      ],
+      "detune_cents": [],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "noisy_major_019",
+      "tones": [
+        220.0,
+        275.0,
+        330.0
+      ],
+      "detune_cents": [],
+      "add_noise": true,
+      "amplitude": 0.3
+    },
+    {
+      "label": "fifth_020",
+      "tones": [
+        220.0,
+        330.0
+      ],
+      "detune_cents": [],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "detuned_fifth_021",
+      "tones": [
+        220.0,
+        330.0
+      ],
+      "detune_cents": [
+        0.0,
+        35.0
+      ],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "dom7_022",
+      "tones": [
+        220.0,
+        275.0,
+        330.0,
+        412.5
+      ],
+      "detune_cents": [],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "single_A3_023",
+      "tones": [
+        220.0
+      ],
+      "detune_cents": [],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "fourth_024",
+      "tones": [
+        220.0,
+        293.3333333333333
+      ],
+      "detune_cents": [],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "detuned_fifth_025",
+      "tones": [
+        220.0,
+        330.0
+      ],
+      "detune_cents": [
+        0.0,
+        35.0
+      ],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "minor_tri_026",
+      "tones": [
+        220.0,
+        264.0,
+        330.0
+      ],
+      "detune_cents": [],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "single_A3_027",
+      "tones": [
+        220.0
+      ],
+      "detune_cents": [],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "half_dim7_028",
+      "tones": [
+        220.0,
+        264.0,
+        311.1269837220809,
+        412.5
+      ],
+      "detune_cents": [],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "half_dim7_029",
+      "tones": [
+        220.0,
+        264.0,
+        311.1269837220809,
+        412.5
+      ],
+      "detune_cents": [],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "detuned_fifth_030",
+      "tones": [
+        220.0,
+        330.0
+      ],
+      "detune_cents": [
+        0.0,
+        35.0
+      ],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "octave_A4_031",
+      "tones": [
+        220.0,
+        440.0
+      ],
+      "detune_cents": [],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "single_A3_032",
+      "tones": [
+        220.0
+      ],
+      "detune_cents": [],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "detuned_fifth_033",
+      "tones": [
+        220.0,
+        330.0
+      ],
+      "detune_cents": [
+        0.0,
+        35.0
+      ],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "single_A3_034",
+      "tones": [
+        220.0
+      ],
+      "detune_cents": [],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "minor_tri_035",
+      "tones": [
+        220.0,
+        264.0,
+        330.0
+      ],
+      "detune_cents": [],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "single_A3_036",
+      "tones": [
+        220.0
+      ],
+      "detune_cents": [],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "fifth_037",
+      "tones": [
+        220.0,
+        330.0
+      ],
+      "detune_cents": [],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "major_tri_038",
+      "tones": [
+        220.0,
+        275.0,
+        330.0
+      ],
+      "detune_cents": [],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "major_tri_039",
+      "tones": [
+        220.0,
+        275.0,
+        330.0
+      ],
+      "detune_cents": [],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "major_tri_040",
+      "tones": [
+        220.0,
+        275.0,
+        330.0
+      ],
+      "detune_cents": [],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "single_A3_041",
+      "tones": [
+        220.0
+      ],
+      "detune_cents": [],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "single_A3_042",
+      "tones": [
+        220.0
+      ],
+      "detune_cents": [],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "octave_A4_043",
+      "tones": [
+        220.0,
+        440.0
+      ],
+      "detune_cents": [],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "single_A3_044",
+      "tones": [
+        220.0
+      ],
+      "detune_cents": [],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "dom7_045",
+      "tones": [
+        220.0,
+        275.0,
+        330.0,
+        412.5
+      ],
+      "detune_cents": [],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "minor_tri_046",
+      "tones": [
+        220.0,
+        264.0,
+        330.0
+      ],
+      "detune_cents": [],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "dom7_047",
+      "tones": [
+        220.0,
+        275.0,
+        330.0,
+        412.5
+      ],
+      "detune_cents": [],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "fifth_048",
+      "tones": [
+        220.0,
+        330.0
+      ],
+      "detune_cents": [],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "dom7_049",
+      "tones": [
+        220.0,
+        275.0,
+        330.0,
+        412.5
+      ],
+      "detune_cents": [],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "half_dim7_050",
+      "tones": [
+        220.0,
+        264.0,
+        311.1269837220809,
+        412.5
+      ],
+      "detune_cents": [],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "fourth_051",
+      "tones": [
+        220.0,
+        293.3333333333333
+      ],
+      "detune_cents": [],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "major_tri_052",
+      "tones": [
+        220.0,
+        275.0,
+        330.0
+      ],
+      "detune_cents": [],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "noisy_major_053",
+      "tones": [
+        220.0,
+        275.0,
+        330.0
+      ],
+      "detune_cents": [],
+      "add_noise": true,
+      "amplitude": 0.3
+    },
+    {
+      "label": "detuned_fifth_054",
+      "tones": [
+        220.0,
+        330.0
+      ],
+      "detune_cents": [
+        0.0,
+        35.0
+      ],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "noisy_major_055",
+      "tones": [
+        220.0,
+        275.0,
+        330.0
+      ],
+      "detune_cents": [],
+      "add_noise": true,
+      "amplitude": 0.3
+    },
+    {
+      "label": "fourth_056",
+      "tones": [
+        220.0,
+        293.3333333333333
+      ],
+      "detune_cents": [],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "dom7_057",
+      "tones": [
+        220.0,
+        275.0,
+        330.0,
+        412.5
+      ],
+      "detune_cents": [],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "noisy_major_058",
+      "tones": [
+        220.0,
+        275.0,
+        330.0
+      ],
+      "detune_cents": [],
+      "add_noise": true,
+      "amplitude": 0.3
+    },
+    {
+      "label": "dom7_059",
+      "tones": [
+        220.0,
+        275.0,
+        330.0,
+        412.5
+      ],
+      "detune_cents": [],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "detuned_fifth_060",
+      "tones": [
+        220.0,
+        330.0
+      ],
+      "detune_cents": [
+        0.0,
+        35.0
+      ],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "dom7_061",
+      "tones": [
+        220.0,
+        275.0,
+        330.0,
+        412.5
+      ],
+      "detune_cents": [],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "half_dim7_062",
+      "tones": [
+        220.0,
+        264.0,
+        311.1269837220809,
+        412.5
+      ],
+      "detune_cents": [],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "fourth_063",
+      "tones": [
+        220.0,
+        293.3333333333333
+      ],
+      "detune_cents": [],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "detuned_fifth_064",
+      "tones": [
+        220.0,
+        330.0
+      ],
+      "detune_cents": [
+        0.0,
+        35.0
+      ],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "octave_A4_065",
+      "tones": [
+        220.0,
+        440.0
+      ],
+      "detune_cents": [],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "minor_tri_066",
+      "tones": [
+        220.0,
+        264.0,
+        330.0
+      ],
+      "detune_cents": [],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "half_dim7_067",
+      "tones": [
+        220.0,
+        264.0,
+        311.1269837220809,
+        412.5
+      ],
+      "detune_cents": [],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "detuned_fifth_068",
+      "tones": [
+        220.0,
+        330.0
+      ],
+      "detune_cents": [
+        0.0,
+        35.0
+      ],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "minor_tri_069",
+      "tones": [
+        220.0,
+        264.0,
+        330.0
+      ],
+      "detune_cents": [],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "fourth_070",
+      "tones": [
+        220.0,
+        293.3333333333333
+      ],
+      "detune_cents": [],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "fourth_071",
+      "tones": [
+        220.0,
+        293.3333333333333
+      ],
+      "detune_cents": [],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "major_tri_072",
+      "tones": [
+        220.0,
+        275.0,
+        330.0
+      ],
+      "detune_cents": [],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "major_tri_073",
+      "tones": [
+        220.0,
+        275.0,
+        330.0
+      ],
+      "detune_cents": [],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "half_dim7_074",
+      "tones": [
+        220.0,
+        264.0,
+        311.1269837220809,
+        412.5
+      ],
+      "detune_cents": [],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "detuned_fifth_075",
+      "tones": [
+        220.0,
+        330.0
+      ],
+      "detune_cents": [
+        0.0,
+        35.0
+      ],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "single_A3_076",
+      "tones": [
+        220.0
+      ],
+      "detune_cents": [],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "noisy_major_077",
+      "tones": [
+        220.0,
+        275.0,
+        330.0
+      ],
+      "detune_cents": [],
+      "add_noise": true,
+      "amplitude": 0.3
+    },
+    {
+      "label": "minor_tri_078",
+      "tones": [
+        220.0,
+        264.0,
+        330.0
+      ],
+      "detune_cents": [],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "fourth_079",
+      "tones": [
+        220.0,
+        293.3333333333333
+      ],
+      "detune_cents": [],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "dom7_080",
+      "tones": [
+        220.0,
+        275.0,
+        330.0,
+        412.5
+      ],
+      "detune_cents": [],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "minor_tri_081",
+      "tones": [
+        220.0,
+        264.0,
+        330.0
+      ],
+      "detune_cents": [],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "fifth_082",
+      "tones": [
+        220.0,
+        330.0
+      ],
+      "detune_cents": [],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "fourth_083",
+      "tones": [
+        220.0,
+        293.3333333333333
+      ],
+      "detune_cents": [],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "half_dim7_084",
+      "tones": [
+        220.0,
+        264.0,
+        311.1269837220809,
+        412.5
+      ],
+      "detune_cents": [],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "minor_tri_085",
+      "tones": [
+        220.0,
+        264.0,
+        330.0
+      ],
+      "detune_cents": [],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "minor_tri_086",
+      "tones": [
+        220.0,
+        264.0,
+        330.0
+      ],
+      "detune_cents": [],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "fourth_087",
+      "tones": [
+        220.0,
+        293.3333333333333
+      ],
+      "detune_cents": [],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "half_dim7_088",
+      "tones": [
+        220.0,
+        264.0,
+        311.1269837220809,
+        412.5
+      ],
+      "detune_cents": [],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "fourth_089",
+      "tones": [
+        220.0,
+        293.3333333333333
+      ],
+      "detune_cents": [],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "fourth_090",
+      "tones": [
+        220.0,
+        293.3333333333333
+      ],
+      "detune_cents": [],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "detuned_fifth_091",
+      "tones": [
+        220.0,
+        330.0
+      ],
+      "detune_cents": [
+        0.0,
+        35.0
+      ],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "fifth_092",
+      "tones": [
+        220.0,
+        330.0
+      ],
+      "detune_cents": [],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "fifth_093",
+      "tones": [
+        220.0,
+        330.0
+      ],
+      "detune_cents": [],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "half_dim7_094",
+      "tones": [
+        220.0,
+        264.0,
+        311.1269837220809,
+        412.5
+      ],
+      "detune_cents": [],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "dom7_095",
+      "tones": [
+        220.0,
+        275.0,
+        330.0,
+        412.5
+      ],
+      "detune_cents": [],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "single_A3_096",
+      "tones": [
+        220.0
+      ],
+      "detune_cents": [],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "single_A3_097",
+      "tones": [
+        220.0
+      ],
+      "detune_cents": [],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "fourth_098",
+      "tones": [
+        220.0,
+        293.3333333333333
+      ],
+      "detune_cents": [],
+      "add_noise": false,
+      "amplitude": 0.3
+    },
+    {
+      "label": "detuned_fifth_099",
+      "tones": [
+        220.0,
+        330.0
+      ],
+      "detune_cents": [
+        0.0,
+        35.0
+      ],
+      "add_noise": false,
+      "amplitude": 0.3
+    }
+  ],
+  "stats": {
+    "pdf_sum_mean": 1.0,
+    "pdf_sum_std": 9.742167503148516e-17,
+    "rms_mean": 0.14290931343032892,
+    "rms_std": 0.03289400659002905,
+    "l2_concentration_mean": 0.34043118317399423
+  }
+}
