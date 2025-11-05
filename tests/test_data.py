@@ -68,6 +68,26 @@ def test_dataset_resample(tmp_path: Path) -> None:
     assert 0.0 <= float(sample["rho"]) <= 1.0
 
 
+def test_dataset_short_clip_padding(tmp_path: Path) -> None:
+    audio_path = tmp_path / "short.wav"
+    duration = 0.4  # seconds
+    t = np.arange(int(SAMPLE_RATE * duration), dtype=np.float64) / SAMPLE_RATE
+    waveform = 0.5 * np.sin(2.0 * np.pi * 330.0 * t)
+    sf.write(audio_path, waveform.astype(np.float32), SAMPLE_RATE)
+
+    config = FeatureDatasetConfig(
+        sample_rate=SAMPLE_RATE,
+        frame_length_sec=1.0,
+        hop_length_sec=1.0,
+        ccf=CCFConfig(n_bins=30),
+    )
+    dataset = VocalFeatureDataset(tmp_path, config=config)
+    assert len(dataset) == 1
+    sample = dataset[0]
+    assert sample["ccf"].shape == (30,)
+    assert math.isclose(float(sample["ccf"].sum()), 1.0, rel_tol=1e-6)
+
+
 def test_precomputed_dataset_roundtrip(tmp_path: Path) -> None:
     audio_path = tmp_path / "tone.wav"
     _write_tone(audio_path, freq=261.63, duration=0.25)

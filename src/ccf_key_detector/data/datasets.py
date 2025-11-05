@@ -70,10 +70,20 @@ class VocalFeatureDataset(Dataset):
             hop_len = int(round(self.config.hop_length_sec * info.samplerate))
             if frame_len <= 0 or hop_len <= 0:
                 continue
+            if info.frames == 0:
+                continue
             start = 0
+            appended = False
             while start + frame_len <= info.frames:
                 self._index.append((idx, start, frame_len))
+                appended = True
                 start += hop_len
+            if not appended:
+                # Include at least one padded frame for short clips.
+                self._index.append((idx, 0, info.frames))
+            elif start < info.frames:
+                # Capture the final partial window with padding.
+                self._index.append((idx, info.frames - frame_len, frame_len))
 
     def __len__(self) -> int:  # type: ignore[override]
         return len(self._index)
