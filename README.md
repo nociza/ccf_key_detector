@@ -19,7 +19,7 @@ This project implements a realtime tonal-center estimator built on a continuous 
 ## Highlights
 
 - Continuous chroma feature extractor with configurable smoothing and diagnostics
-- KK-major single-key evaluator plus circular scan to obtain a tonal distribution
+- Dual SKE backends: the classic KK-major scan and a CICV-driven VAE “in-key” detector
 - File and live-audio streaming back ends with lightweight resampling
 - Realtime visualizers (line, polar, cylinder, surface, OSC stream) for rapid feedback
 - Convenience scripts for generating synthetic material and validating SKE behaviour
@@ -80,9 +80,11 @@ Python 3.10 or newer is required. The realtime pipeline relies on PortAudio via 
   ```bash
   PYTHONPATH=src python scripts/plot_ske_distribution.py path/to/audio.wav
   ```
-- Run the realtime pipeline (live input by default, or `--audio-file` for playback):
+- Run the realtime pipeline (live input by default, or `--audio-file` for playback). To enable the CICV-VAE backend, specify the checkpoint path:
   ```bash
-  PYTHONPATH=src python scripts/run_live_ccf.py --viz-mode polar_single
+  PYTHONPATH=src python scripts/run_live_ccf.py --viz-mode polar_single \
+      --ske-backend cicv_vae \
+      --cicv-vae-checkpoint checkpoints/cicv_vae.pt
   ```
 - Kick off a minimal VAE training smoke test (CPU friendly):
   ```bash
@@ -126,6 +128,14 @@ windows on the fly—no separate preprocessing step is required.
 **`test_half_diminished_features.py`**
 - Visualises log-CCF, CICV, interval torus, and center-field for a synthetic half-diminished seventh chord.
 
+**`train_cicv_vae.py`**
+- `--manifest`: Precomputed manifest produced by `scripts/precompute_features.py`.
+- `--checkpoint`: Destination `.pt` checkpoint for the CICV-VAE.
+- `--epochs`, `--batch-size`, `--lr`: Optimisation hyper-parameters.
+- `--latent-dim`, `--hidden-dims`: Architecture controls for the VAE.
+- `--beta`: KL weight (default `0.1`).
+- `--max-steps`: Optional step cap per epoch (helpful for smoke tests).
+
 **`run_live_ccf.py`**
 - `--audio-file`: Optional WAV file for offline playback; omit to use a live input device.
 - `--sample-rate`: Processing sample rate (Hz).
@@ -139,6 +149,10 @@ windows on the fly—no separate preprocessing step is required.
 - `--headless`: Skip rendering windows (useful with OSC modes).
 - `--normalize-ske-dist`: Emit normalised SKE probabilities instead of raw scores.
 - `--print-stats`: Log diagnostics (RMS, spectral flatness, SKE peaks) for each hop.
+- `--ske-backend`: Choose between `kk_major` (default) and `cicv_vae`.
+- `--cicv-vae-checkpoint`: Path to a CICV-VAE checkpoint when `--ske-backend cicv_vae` is selected.
+- `--cicv-vae-temperature`: Scaling factor for the CICV-VAE likelihood (default `50.0`).
+- `--cicv-vae-device`: Device override (`cpu`/`cuda`) for the CICV-VAE inference model.
 - `--osc-host`: Destination host for OSC streaming (default `127.0.0.1`).
 - `--osc-port`: UDP port for OSC streaming (default `7400`).
 - `--osc-address`: OSC address pattern for transmitted packets (default `/ccf/pdf`; a leading slash is added automatically if omitted).

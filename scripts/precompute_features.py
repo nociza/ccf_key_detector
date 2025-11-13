@@ -77,10 +77,46 @@ def main() -> None:
     if manifest_path.exists() and not args.overwrite:
         raise RuntimeError(f"{manifest_path} already exists; use --overwrite to replace it")
 
-    aggregation: Dict[Path, Dict[str, List[np.ndarray]]] = {}
-    diag_buffers: Dict[Path, Dict[str, List[float]]] = {}
-    starts: Dict[Path, List[int]] = {}
-    counts: Dict[Path, int] = defaultdict(int)
+    current_data: Dict[str, List[np.ndarray]] = {}
+    current_diags: Dict[str, List[float]] = {}
+    current_starts: List[int] = []
+    current_rel: Optional[Path] = None
+    processed_files: List[Path] = []
+    entries: List[Dict[str, object]] = []
+
+    def flush_current() -> None:
+        nonlocal current_data, current_diags, current_starts, current_rel
+        if current_rel is None or not current_data:
+            return
+        out_path = target_root / current_rel.with_suffix(".npz")
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        arrays = {
+            name: np.stack(values).astype(np.float32)
+            for name, values in current_data.items()
+            if name not in {"mu", "rho"}
+        }
+        arrays["mu"] = np.asarray(current_data.get("mu", []), dtype=np.float32)
+        arrays["rho"] = np.asarray(current_data.get("rho", []), dtype=np.float32)
+        arrays["starts"] = np.asarray(current_starts, dtype=np.int64)
+        for key, values in current_diags.items():
+            arrays[f"diag_{key}"] = np.asarray(values, dtype=np.float32)
+        np.savez_compressed(out_path, **arrays)
+        entries.append(
+            {
+                "audio": str(current_rel),
+                "features": str(out_path.relative_to(target_root)),
+                "n_frames": int(arrays["mu"].shape[0]),
+                "sample_rate": args.sample_rate,
+                "frame_length_sec": args.frame_length,
+                "hop_length_sec": args.hop_length,
+                "starts": arrays["starts"].tolist(),
+            }
+        )
+        processed_files.append(current_rel)
+        current_data = {}
+        current_diags = {}
+        current_starts = []
+        current_rel = None
 
     total_frames = len(dataset)
     total_audio_files = len(dataset._files)  # type: ignore[attr-defined]
@@ -98,39 +134,40 @@ def main() -> None:
         audio_path = Path(metadata["path"]).resolve()
         rel_path = _ensure_relative(audio_path, audio_root)
 
-        if args.max_files is not None and len(aggregation) >= args.max_files and rel_path not in aggregation:
-            break
+        if current_rel is None:
+            if args.max_files is not None and len(processed_files) >= args.max_files:
+                break
+            current_rel = rel_path
+            current_data = {"ccf": [], "cicv": [], "center": [], "mu": [], "rho": []}
+            current_diags = defaultdict(list)
+            current_starts = []
+        elif rel_path != current_rel:
+            flush_current()
+            if args.max_files is not None and len(processed_files) >= args.max_files:
+                break
+            current_rel = rel_path
+            current_data = {"ccf": [], "cicv": [], "center": [], "mu": [], "rho": []}
+            current_diags = defaultdict(list)
+            current_starts = []
 
-        record = aggregation.setdefault(
-            rel_path,
-            {
-                "ccf": [],
-                "cicv": [],
-                "center": [],
-                "mu": [],
-                "rho": [],
-            },
-        )
-        record["ccf"].append(sample["ccf"].numpy())
-        record["cicv"].append(sample["cicv"].numpy())
-        record["center"].append(sample["center_field"].numpy())
-        record["mu"].append(float(sample["mu"]))
-        record["rho"].append(float(sample["rho"]))
+        current_data["ccf"].append(sample["ccf"].numpy())
+        current_data["cicv"].append(sample["cicv"].numpy())
+        current_data["center"].append(sample["center_field"].numpy())
+        current_data["mu"].append(float(sample["mu"]))
+        current_data["rho"].append(float(sample["rho"]))
 
         if not args.skip_folded_cicv:
-            record.setdefault("cicv_folded", []).append(sample["cicv_folded"].numpy())
+            current_data.setdefault("cicv_folded", []).append(sample["cicv_folded"].numpy())
         if args.include_torus and "torus" in sample:
-            record.setdefault("torus", []).append(sample["torus"].numpy())
+            current_data.setdefault("torus", []).append(sample["torus"].numpy())
 
-        starts.setdefault(rel_path, []).append(int(metadata["start"]))
-        diags = diag_buffers.setdefault(rel_path, defaultdict(list))
         for key, value in sample["diagnostics"].items():
-            diags[key].append(float(value))
-        counts[rel_path] += 1
+            current_diags[key].append(float(value))
+        current_starts.append(int(metadata["start"]))
         frames_processed += 1
 
         if frames_processed % max(1, args.log_every) == 0:
-            unique_files = len(aggregation)
+            unique_files = len(processed_files) + (1 if current_rel is not None else 0)
             pct_files = (unique_files / total_audio_files * 100.0) if total_audio_files else 0.0
             print(
                 f"[progress] frames={frames_processed}/{total_frames} "
@@ -138,35 +175,8 @@ def main() -> None:
                 f"last_file={rel_path}"
             )
 
+    flush_current()
     target_root.mkdir(parents=True, exist_ok=True)
-    entries: List[Dict[str, object]] = []
-
-    for rel_path, data in aggregation.items():
-        out_path = target_root / rel_path.with_suffix(".npz")
-        out_path.parent.mkdir(parents=True, exist_ok=True)
-
-        arrays = {name: np.stack(values).astype(np.float32) for name, values in data.items() if name not in {"mu", "rho"}}
-        arrays["mu"] = np.asarray(data["mu"], dtype=np.float32)
-        arrays["rho"] = np.asarray(data["rho"], dtype=np.float32)
-        arrays["starts"] = np.asarray(starts[rel_path], dtype=np.int64)
-
-        diag = diag_buffers.get(rel_path, {})
-        for key, values in diag.items():
-            arrays[f"diag_{key}"] = np.asarray(values, dtype=np.float32)
-
-        np.savez_compressed(out_path, **arrays)
-
-        entries.append(
-            {
-                "audio": str(rel_path),
-                "features": str(out_path.relative_to(target_root)),
-                "n_frames": int(arrays["mu"].shape[0]),
-                "sample_rate": args.sample_rate,
-                "frame_length_sec": args.frame_length,
-                "hop_length_sec": args.hop_length,
-                "starts": arrays["starts"].tolist(),
-            }
-        )
 
     manifest = {
         "cfg_id": pre_cfg.cfg_id(),

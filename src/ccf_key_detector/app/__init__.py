@@ -75,10 +75,11 @@ class Runner:
             pdf, diagnostics = self.ccf_extractor.compute(processed, self.config.sample_rate)
             diagnostics = dict(diagnostics)
             diagnostics["processing_latency_ms"] = (time.perf_counter() - start_time) * 1000.0
-            tonal_pdf = self._scan_tonal_distribution(pdf)
+            tonal_pdf, ske_diag = self._scan_tonal_distribution(pdf)
             diagnostics["ske_score"] = float(np.max(tonal_pdf))
             diagnostics["ske_distribution"] = tonal_pdf.tolist()
             diagnostics["ske_peak_index"] = int(np.argmax(tonal_pdf))
+            diagnostics.update(ske_diag)
             last_status = getattr(self.audio_stream, "last_status", None)
             if callable(last_status):
                 status_value = last_status()
@@ -99,16 +100,21 @@ class Runner:
         if callable(stop):
             stop()
 
-    def _scan_tonal_distribution(self, pdf: Sequence[float]) -> np.ndarray:
+    def _scan_tonal_distribution(self, pdf: Sequence[float]) -> tuple[np.ndarray, dict]:
         normalized = scan_distribution(pdf, self.ske, self.transpose)
-        if not self.config.viz.normalize_ske_dist:
-            vector = np.asarray(pdf, dtype=np.float64)
-            scores = np.empty(self.config.n_bins, dtype=np.float64)
-            for shift in range(self.config.n_bins):
-                rotated = self.transpose.apply(vector, shift)
-                scores[shift] = self.ske.evaluate(rotated)
-            return scores
-        return normalized
+        if getattr(self.ske, "requires_transposition", True):
+            if not self.config.viz.normalize_ske_dist:
+                vector = np.asarray(pdf, dtype=np.float64)
+                scores = np.empty(self.config.n_bins, dtype=np.float64)
+                for shift in range(self.config.n_bins):
+                    rotated = self.transpose.apply(vector, shift)
+                    scores[shift] = self.ske.evaluate(rotated)
+                return scores, getattr(self.ske, "diagnostics", lambda: {})()
+            return normalized, getattr(self.ske, "diagnostics", lambda: {})()
+
+        score = self.ske.evaluate(pdf)
+        distribution = np.full(self.config.n_bins, score, dtype=np.float64)
+        return distribution, getattr(self.ske, "diagnostics", lambda: {})()
 
 
 def create_runner(config: RunnerConfig) -> Runner:

@@ -25,6 +25,7 @@ from ccf_key_detector.rt_viz import (
     VisualizationMode,
     create_visualizer,
 )
+from ccf_key_detector.ske import SKEBackend, SKEConfig
 
 
 def _parse_device(raw: Optional[str]) -> Optional[int | str]:
@@ -138,6 +139,30 @@ def parse_args() -> argparse.Namespace:
         default=65_507,
         help="Maximum OSC datagram payload size before raising an error",
     )
+    parser.add_argument(
+        "--ske-backend",
+        type=str,
+        choices=[backend.value for backend in SKEBackend],
+        default=SKEBackend.KK_MAJOR.value,
+        help="SKE backend to use for tonal scoring",
+    )
+    parser.add_argument(
+        "--cicv-vae-checkpoint",
+        type=Path,
+        help="Checkpoint for the CICV-VAE backend (required for --ske-backend cicv_vae)",
+    )
+    parser.add_argument(
+        "--cicv-vae-temperature",
+        type=float,
+        default=50.0,
+        help="Score temperature for the CICV-VAE backend",
+    )
+    parser.add_argument(
+        "--cicv-vae-device",
+        type=str,
+        default=None,
+        help="Device override for the CICV-VAE backend",
+    )
     return parser.parse_args()
 
 
@@ -165,6 +190,14 @@ def main() -> None:
         audio_input_device=_parse_device(args.device),
     )
     runner_config.ccf = replace(runner_config.ccf, n_bins=args.n_bins)
+    ske_mode = SKEBackend(args.ske_backend)
+    ske_config = SKEConfig(
+        mode=ske_mode,
+        cicv_vae_checkpoint=str(args.cicv_vae_checkpoint) if args.cicv_vae_checkpoint else None,
+        cicv_vae_device=args.cicv_vae_device,
+        cicv_score_temperature=args.cicv_vae_temperature,
+    )
+    runner_config.ske = ske_config
 
     runner = create_runner(runner_config)
 
