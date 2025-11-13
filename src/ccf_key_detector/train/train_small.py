@@ -1,21 +1,18 @@
-"""Minimal training loop for the feature-level VAE.
-
-This script is intentionally lightweight—run small synthetic or curated
-datasets on CPU to validate the plumbing before moving training to the T4
-server. The curriculum from the build plan (PT1–PT3) can be layered on top of
-``train_small`` by adding auxiliary heads/losses inside the loop.
-"""
+"""Training loop for the feature-level VAE with checkpointing and AMP support."""
 
 from __future__ import annotations
 
 import argparse
+import csv
 import math
-from dataclasses import dataclass, field, replace
+from dataclasses import asdict, dataclass, field, replace
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 import torch
 import torch.nn.functional as F
+from torch.nn.utils import clip_grad_norm_
+from torch.cuda.amp import GradScaler, autocast
 from torch.utils.data import DataLoader
 
 from ccf_key_detector.data import (
@@ -51,6 +48,14 @@ class TrainingConfig:
     device: Optional[str] = None
     max_steps_per_epoch: Optional[int] = None
     precomputed_manifest: Optional[Path] = None
+    checkpoint_dir: Optional[Path] = None
+    save_every: int = 1
+    resume_from: Optional[Path] = None
+    amp: bool = False
+    grad_clip: Optional[float] = None
+    log_file: Optional[Path] = None
+    num_workers: int = 0
+    pin_memory: bool = False
 
 
 @dataclass
@@ -79,7 +84,13 @@ def train_small(
     else:
         feature_cfg = replace(config.feature, include_torus=True)
         dataset = VocalFeatureDataset(config.dataset_root, feature_cfg)
-    dataloader = DataLoader(dataset, batch_size=config.batch_size, shuffle=True)
+    dataloader = DataLoader(
+        dataset,
+        batch_size=config.batch_size,
+        shuffle=True,
+        num_workers=config.num_workers,
+        pin_memory=config.pin_memory and device.startswith("cuda"),
+    )
 
     if state is not None:
         model = state.model.to(device)
@@ -91,62 +102,82 @@ def train_small(
     optimizer = torch.optim.Adam(
         list(model.parameters()) + list(aux_heads.parameters()), lr=config.lr
     )
+    scaler = GradScaler(enabled=config.amp and device.startswith("cuda"))
 
+    start_epoch = 0
     global_step = 0
+    if config.resume_from is not None:
+        start_epoch, global_step = _load_checkpoint(
+            config.resume_from, model, aux_heads, optimizer, scaler, device
+        )
+
+    logger = _TrainLogger(config.log_file)
     model.train()
     history: Optional[List[Dict[str, float]]] = [] if record_history else None
-    for epoch in range(config.num_epochs):
+    for epoch in range(start_epoch, config.num_epochs):
         for step, batch in enumerate(dataloader):
-            x = batch["ccf"].to(device)
-            x = x.unsqueeze(1).unsqueeze(1)
+            x = batch["ccf"].to(device).unsqueeze(1).unsqueeze(1)
 
-            recon, mu, logvar, z = model(x)
-            recon_loss = F.mse_loss(recon, x)
-            kl = _kl_with_free_bits(mu, logvar, config.loss.free_bits)
-            beta = kl_warmup(global_step, config.loss.kl_warmup_steps, config.loss.beta_target)
+            with autocast(enabled=scaler.is_enabled()):
+                recon, mu, logvar, z = model(x)
+                recon_loss = F.mse_loss(recon, x)
+                kl = _kl_with_free_bits(mu, logvar, config.loss.free_bits)
+                beta = kl_warmup(global_step, config.loss.kl_warmup_steps, config.loss.beta_target)
 
-            cicv_logits, center_logits = aux_heads(z)
-            cicv_pred = torch.softmax(cicv_logits, dim=1)
-            cicv_target = batch["cicv"].to(device)
-            z_loss = F.mse_loss(cicv_pred, cicv_target)
+                cicv_logits, center_logits = aux_heads(z)
+                cicv_pred = torch.softmax(cicv_logits, dim=1)
+                cicv_target = batch["cicv"].to(device)
+                z_loss = F.mse_loss(cicv_pred, cicv_target)
 
-            center_pred = torch.relu(center_logits)
-            center_target = batch["center_field"].to(device)
-            center_recon = F.mse_loss(center_pred, center_target)
-            mu_pred, rho_pred = _center_stats(center_pred)
-            mu_target = batch["mu"].to(device)
-            rho_target = batch["rho"].to(device)
-            center_geom = _center_geometry(mu_pred, rho_pred, mu_target, rho_target)
-            center_loss = center_recon + center_geom
+                center_pred = torch.relu(center_logits)
+                center_target = batch["center_field"].to(device)
+                center_recon = F.mse_loss(center_pred, center_target)
+                mu_pred, rho_pred = _center_stats(center_pred)
+                mu_target = batch["mu"].to(device)
+                rho_target = batch["rho"].to(device)
+                center_geom = _center_geometry(mu_pred, rho_pred, mu_target, rho_target)
+                center_loss = center_recon + center_geom
 
-            phase_component = torch.tensor(0.0, device=device)
-            if config.loss.lambda_phase > 0.0 and "torus" in batch:
-                ccf_pred = recon.view(recon.size(0), -1)
-                ccf_pred = torch.relu(ccf_pred)
-                ccf_pred = _normalize_pdf(ccf_pred)
-                torus_pred = build_torus_torch(ccf_pred)
-                torus_target = batch["torus"].to(device)
-                torus_target = torus_target.unsqueeze(1) if torus_target.dim() == 2 else torus_target
-                torus_target = torus_target.to(device)
-                phase_component = phase_loss_torch(torus_target, torus_pred, allow_inversion=True)
+                phase_component = torch.tensor(0.0, device=device)
+                if config.loss.lambda_phase > 0.0 and "torus" in batch:
+                    ccf_pred = recon.view(recon.size(0), -1)
+                    ccf_pred = torch.relu(ccf_pred)
+                    ccf_pred = _normalize_pdf(ccf_pred)
+                    torus_pred = build_torus_torch(ccf_pred)
+                    torus_target = batch["torus"].to(device)
+                    if torus_target.dim() == 2:
+                        torus_target = torus_target.unsqueeze(1)
+                    phase_component = phase_loss_torch(torus_target, torus_pred, allow_inversion=True)
 
-            loss = (
-                config.loss.lambda_recon * recon_loss
-                + beta * kl
-                + config.loss.lambda_z * z_loss
-                + config.loss.lambda_center * center_loss
-                + config.loss.lambda_phase * phase_component
-            )
+                loss = (
+                    config.loss.lambda_recon * recon_loss
+                    + beta * kl
+                    + config.loss.lambda_z * z_loss
+                    + config.loss.lambda_center * center_loss
+                    + config.loss.lambda_phase * phase_component
+                )
 
             optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
+            if scaler.is_enabled():
+                scaler.scale(loss).backward()
+                if config.grad_clip is not None:
+                    scaler.unscale_(optimizer)
+                    clip_grad_norm_(list(model.parameters()) + list(aux_heads.parameters()), config.grad_clip)
+                scaler.step(optimizer)
+                scaler.update()
+            else:
+                loss.backward()
+                if config.grad_clip is not None:
+                    clip_grad_norm_(list(model.parameters()) + list(aux_heads.parameters()), config.grad_clip)
+                optimizer.step()
 
             global_step += 1
             if config.max_steps_per_epoch is not None and step + 1 >= config.max_steps_per_epoch:
                 break
+
+        epoch_idx = epoch + 1
         metrics = {
-            "epoch": float(epoch + 1),
+            "epoch": float(epoch_idx),
             "loss": float(loss.item()),
             "recon": float(recon_loss.item()),
             "kl": float(kl.item()),
@@ -157,18 +188,35 @@ def train_small(
         }
         if history is not None:
             history.append(metrics)
+        logger.log(metrics)
 
         print(
-            f"Epoch {epoch+1}/{config.num_epochs} | loss={loss.item():.4f} "
+            f"Epoch {epoch_idx}/{config.num_epochs} | loss={loss.item():.4f} "
             f"recon={recon_loss.item():.4f} kl={kl.item():.4f} beta={beta:.3f} "
             f"z={z_loss.item():.4f} center={center_loss.item():.4f} phase={phase_component.item():.4f}"
         )
 
+        if config.checkpoint_dir is not None and (
+            epoch_idx % config.save_every == 0 or epoch_idx == config.num_epochs
+        ):
+            _save_checkpoint(
+                config.checkpoint_dir,
+                epoch_idx,
+                global_step,
+                model,
+                aux_heads,
+                optimizer,
+                scaler,
+                config,
+            )
+
     if return_state:
         model_cpu = model.to("cpu")
         aux_cpu = aux_heads.to("cpu")
+        logger.close()
         return TrainArtifacts(state=TrainState(model_cpu, aux_cpu), history=history)
 
+    logger.close()
     return None
 
 
@@ -200,6 +248,23 @@ def _parse_args() -> TrainingConfig:
         default=None,
         help="Optional path to a manifest.json produced by scripts/precompute_features.py",
     )
+    parser.add_argument("--latent-dim", type=int, default=16, help="Latent dimensionality")
+    parser.add_argument(
+        "--hidden-channels",
+        type=int,
+        nargs="+",
+        default=(32, 64),
+        help="Encoder channel widths (space separated)",
+    )
+    parser.add_argument("--use-batch-norm", action="store_true", help="Enable BatchNorm in encoder/decoder")
+    parser.add_argument("--checkpoint-dir", type=Path, default=None, help="Directory to store checkpoints")
+    parser.add_argument("--save-every", type=int, default=1, help="Checkpoint frequency (epochs)")
+    parser.add_argument("--resume-from", type=Path, default=None, help="Path to a checkpoint to resume from")
+    parser.add_argument("--amp", action="store_true", help="Enable automatic mixed precision (CUDA only)")
+    parser.add_argument("--grad-clip", type=float, default=None, help="Gradient clipping value (L2 norm)")
+    parser.add_argument("--log-file", type=Path, default=None, help="Optional CSV log file for metrics")
+    parser.add_argument("--num-workers", type=int, default=0, help="DataLoader worker count")
+    parser.add_argument("--pin-memory", action="store_true", help="Enable pinned memory for DataLoader")
 
     args = parser.parse_args()
     feature_cfg = FeatureDatasetConfig(
@@ -213,6 +278,9 @@ def _parse_args() -> TrainingConfig:
         input_channels=1,
         input_height=1,
         input_width=args.n_bins,
+        hidden_channels=tuple(args.hidden_channels),
+        latent_dim=args.latent_dim,
+        use_batch_norm=args.use_batch_norm,
     )
     loss_cfg = LossWeights(
         lambda_recon=args.lambda_recon,
@@ -234,6 +302,14 @@ def _parse_args() -> TrainingConfig:
         device=args.device,
         max_steps_per_epoch=args.max_steps,
         precomputed_manifest=args.precomputed_manifest,
+        checkpoint_dir=args.checkpoint_dir,
+        save_every=args.save_every,
+        resume_from=args.resume_from,
+        amp=args.amp,
+        grad_clip=args.grad_clip,
+        log_file=args.log_file,
+        num_workers=args.num_workers,
+        pin_memory=args.pin_memory,
     )
 
 
@@ -279,6 +355,75 @@ def _center_geometry(
     distance = 1.0 - torch.cos(2.0 * math.pi * (mu_pred - mu_target))
     weight = torch.minimum(rho_pred, rho_target)
     return torch.mean(weight * distance)
+
+
+def _save_checkpoint(
+    checkpoint_dir: Path,
+    epoch: int,
+    global_step: int,
+    model: SmallVAE,
+    aux_heads: AuxiliaryHeads,
+    optimizer: torch.optim.Optimizer,
+    scaler: GradScaler,
+    config: TrainingConfig,
+) -> None:
+    checkpoint_dir.mkdir(parents=True, exist_ok=True)
+    payload = {
+        "epoch": epoch,
+        "global_step": global_step,
+        "model": model.state_dict(),
+        "aux_heads": aux_heads.state_dict(),
+        "optimizer": optimizer.state_dict(),
+        "scaler": scaler.state_dict() if scaler.is_enabled() else None,
+        "model_config": asdict(config.model),
+        "feature_config": asdict(config.feature),
+        "loss_config": asdict(config.loss),
+        "precomputed_manifest": str(config.precomputed_manifest) if config.precomputed_manifest else None,
+    }
+    path = checkpoint_dir / f"epoch_{epoch:04d}.pt"
+    torch.save(payload, path)
+
+
+def _load_checkpoint(
+    path: Path,
+    model: SmallVAE,
+    aux_heads: AuxiliaryHeads,
+    optimizer: torch.optim.Optimizer,
+    scaler: GradScaler,
+    device: str,
+) -> Tuple[int, int]:
+    ckpt = torch.load(path, map_location=device)
+    model.load_state_dict(ckpt["model"])
+    aux_heads.load_state_dict(ckpt["aux_heads"])
+    optimizer.load_state_dict(ckpt["optimizer"])
+    if scaler.is_enabled() and ckpt.get("scaler") is not None:
+        scaler.load_state_dict(ckpt["scaler"])
+    epoch = int(ckpt.get("epoch", 0))
+    global_step = int(ckpt.get("global_step", 0))
+    return epoch, global_step
+
+
+class _TrainLogger:
+    def __init__(self, path: Optional[Path]) -> None:
+        self.path = path
+        self._file = None
+        self._writer: Optional[csv.DictWriter] = None
+        if path is not None:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            self._file = path.open("w", newline="")
+            fieldnames = ["epoch", "loss", "recon", "kl", "beta", "z", "center", "phase"]
+            self._writer = csv.DictWriter(self._file, fieldnames=fieldnames)
+            self._writer.writeheader()
+
+    def log(self, metrics: Dict[str, float]) -> None:
+        if self._writer is not None:
+            self._writer.writerow(metrics)
+            self._file.flush()
+
+    def close(self) -> None:
+        if self._file is not None:
+            self._file.close()
+            self._file = None
 
 
 if __name__ == "__main__":
