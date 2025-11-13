@@ -31,6 +31,12 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--overwrite", action="store_true", help="Overwrite existing outputs")
     parser.add_argument("--manifest-name", type=str, default="manifest.json")
     parser.add_argument("--max-files", type=int, default=None, help="Process at most N audio files")
+    parser.add_argument(
+        "--log-every",
+        type=int,
+        default=250,
+        help="Print a progress line every N frames (default: 250)",
+    )
     return parser.parse_args()
 
 
@@ -76,6 +82,16 @@ def main() -> None:
     starts: Dict[Path, List[int]] = {}
     counts: Dict[Path, int] = defaultdict(int)
 
+    total_frames = len(dataset)
+    total_audio_files = len(dataset._files)  # type: ignore[attr-defined]
+    if args.max_files is not None:
+        total_audio_files = min(total_audio_files, args.max_files)
+    print(
+        f"Precomputing features: {total_audio_files} file(s) budget, "
+        f"{total_frames} frame slots (before max-files filtering)"
+    )
+
+    frames_processed = 0
     for idx in range(len(dataset)):
         sample = dataset[idx]
         metadata = sample["metadata"]
@@ -111,6 +127,16 @@ def main() -> None:
         for key, value in sample["diagnostics"].items():
             diags[key].append(float(value))
         counts[rel_path] += 1
+        frames_processed += 1
+
+        if frames_processed % max(1, args.log_every) == 0:
+            unique_files = len(aggregation)
+            pct_files = (unique_files / total_audio_files * 100.0) if total_audio_files else 0.0
+            print(
+                f"[progress] frames={frames_processed}/{total_frames} "
+                f"files={unique_files}/{total_audio_files} ({pct_files:.1f}%) "
+                f"last_file={rel_path}"
+            )
 
     target_root.mkdir(parents=True, exist_ok=True)
     entries: List[Dict[str, object]] = []
