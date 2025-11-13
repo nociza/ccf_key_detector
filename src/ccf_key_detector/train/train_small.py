@@ -18,7 +18,11 @@ import torch
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
 
-from ccf_key_detector.data import FeatureDatasetConfig, VocalFeatureDataset
+from ccf_key_detector.data import (
+    FeatureDatasetConfig,
+    PrecomputedFeatureDataset,
+    VocalFeatureDataset,
+)
 from ccf_key_detector.features import CCFConfig, build_torus_torch
 from ccf_key_detector.losses import kl_warmup, phase_loss_torch
 from ccf_key_detector.models import AuxiliaryHeads, SmallVAE, SmallVAEConfig
@@ -46,6 +50,7 @@ class TrainingConfig:
     loss: LossWeights = field(default_factory=LossWeights)
     device: Optional[str] = None
     max_steps_per_epoch: Optional[int] = None
+    precomputed_manifest: Optional[Path] = None
 
 
 @dataclass
@@ -68,8 +73,12 @@ def train_small(
     record_history: bool = False,
 ) -> Optional[TrainArtifacts]:
     device = config.device or ("cuda" if torch.cuda.is_available() else "cpu")
-    feature_cfg = replace(config.feature, include_torus=True)
-    dataset = VocalFeatureDataset(config.dataset_root, feature_cfg)
+
+    if config.precomputed_manifest is not None:
+        dataset = PrecomputedFeatureDataset(config.precomputed_manifest)
+    else:
+        feature_cfg = replace(config.feature, include_torus=True)
+        dataset = VocalFeatureDataset(config.dataset_root, feature_cfg)
     dataloader = DataLoader(dataset, batch_size=config.batch_size, shuffle=True)
 
     if state is not None:
@@ -165,7 +174,11 @@ def train_small(
 
 def _parse_args() -> TrainingConfig:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("dataset_root", type=Path, help="Root directory containing audio files")
+    parser.add_argument(
+        "dataset_root",
+        type=Path,
+        help="Root directory containing audio files (ignored if --precomputed-manifest is set)",
+    )
     parser.add_argument("--epochs", type=int, default=1, help="Number of epochs")
     parser.add_argument("--batch-size", type=int, default=8, help="Mini-batch size")
     parser.add_argument("--lr", type=float, default=1e-3, help="Learning rate")
@@ -181,6 +194,12 @@ def _parse_args() -> TrainingConfig:
     parser.add_argument("--beta-target", type=float, default=1.0, help="Target KL weight")
     parser.add_argument("--kl-warmup-steps", type=int, default=1000, help="Number of warm-up steps for KL weight")
     parser.add_argument("--free-bits", type=float, default=0.0, help="Free bits per latent dimension")
+    parser.add_argument(
+        "--precomputed-manifest",
+        type=Path,
+        default=None,
+        help="Optional path to a manifest.json produced by scripts/precompute_features.py",
+    )
 
     args = parser.parse_args()
     feature_cfg = FeatureDatasetConfig(
@@ -214,6 +233,7 @@ def _parse_args() -> TrainingConfig:
         loss=loss_cfg,
         device=args.device,
         max_steps_per_epoch=args.max_steps,
+        precomputed_manifest=args.precomputed_manifest,
     )
 
 
