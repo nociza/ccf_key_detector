@@ -136,7 +136,8 @@ class PrecomputedFeatureDataset(torch.utils.data.Dataset):
         self.manifest_path = manifest_path.resolve()
         self.manifest = PrecomputedManifest.load(self.manifest_path)
         self._feature_root = self.manifest_path.parent
-        self._cache: Dict[int, Dict[str, np.ndarray]] = {}
+        self._cached_entry_idx: Optional[int] = None
+        self._cached_arrays: Optional[Dict[str, np.ndarray]] = None
         self._index: List[Tuple[int, int]] = []
         for entry_idx, entry in enumerate(self.manifest.entries):
             for frame_idx in range(entry.n_frames):
@@ -148,7 +149,7 @@ class PrecomputedFeatureDataset(torch.utils.data.Dataset):
     def __getitem__(self, idx: int):  # type: ignore[override]
         entry_idx, frame_idx = self._index[idx]
         entry = self.manifest.entries[entry_idx]
-        arrays = self._cache.setdefault(entry_idx, self._load_entry(entry))
+        arrays = self._get_entry_arrays(entry_idx, entry)
 
         sample = {
             "ccf": torch.from_numpy(arrays["ccf"][frame_idx]).float(),
@@ -179,12 +180,25 @@ class PrecomputedFeatureDataset(torch.utils.data.Dataset):
 
         return sample
 
+    def _get_entry_arrays(self, entry_idx: int, entry: PrecomputedEntry) -> Dict[str, np.ndarray]:
+        if self._cached_entry_idx == entry_idx and self._cached_arrays is not None:
+            return self._cached_arrays
+        arrays = self._load_entry(entry)
+        self._cached_entry_idx = entry_idx
+        self._cached_arrays = arrays
+        return arrays
+
     def _load_entry(self, entry: PrecomputedEntry) -> Dict[str, np.ndarray]:
         path = (self._feature_root / entry.features).resolve()
         if not path.exists():
             raise FileNotFoundError(path)
-        with np.load(path, allow_pickle=False) as data:
+# fmt: off
+        data = np.load(path, allow_pickle=False)
+        try:
             arrays = {key: data[key] for key in data.files}
+        finally:
+            data.close()
+# fmt: on
         return arrays
 
 
