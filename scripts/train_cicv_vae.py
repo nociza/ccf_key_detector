@@ -87,9 +87,12 @@ def train(args: argparse.Namespace) -> Dict[str, float]:
         "beta": args.beta,
         "manifest": str(args.manifest),
     }
-    args.checkpoint.parent.mkdir(parents=True, exist_ok=True)
-    torch.save(checkpoint, args.checkpoint)
-    print(f"Saved checkpoint to {args.checkpoint}")
+    checkpoint_path = args.checkpoint
+    if checkpoint_path.suffix == "":
+        checkpoint_path = checkpoint_path.with_suffix(".pt")
+    checkpoint_path.parent.mkdir(parents=True, exist_ok=True)
+    torch.save(checkpoint, checkpoint_path)
+    print(f"Saved checkpoint to {checkpoint_path}")
     return history[-1]
 
 
