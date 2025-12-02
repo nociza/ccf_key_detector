@@ -101,8 +101,8 @@ class Runner:
             stop()
 
     def _scan_tonal_distribution(self, pdf: Sequence[float]) -> tuple[np.ndarray, dict]:
-        normalized = scan_distribution(pdf, self.ske, self.transpose)
         if getattr(self.ske, "requires_transposition", True):
+            normalized = scan_distribution(pdf, self.ske, self.transpose)
             if not self.config.viz.normalize_ske_dist:
                 vector = np.asarray(pdf, dtype=np.float64)
                 scores = np.empty(self.config.n_bins, dtype=np.float64)

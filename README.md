@@ -80,6 +80,12 @@ Python 3.10 or newer is required. The realtime pipeline relies on PortAudio via 
   ```bash
   PYTHONPATH=src python scripts/plot_ske_distribution.py path/to/audio.wav
   ```
+- Run the CICV-VAE pipeline (live by default, or `--audio-file`):
+  ```bash
+  PYTHONPATH=src python scripts/run_cicv_vae.py \
+      --checkpoint checkpoints/cicv_vae.pt \
+      --n-bins 720 --print-stats
+  ```
 - Run the realtime pipeline (live input by default, or `--audio-file` for playback). To enable the CICV-VAE backend, specify the checkpoint path:
   ```bash
   PYTHONPATH=src python scripts/run_live_ccf.py --viz-mode polar_single \
@@ -135,6 +141,14 @@ windows on the fly—no separate preprocessing step is required.
 - `--latent-dim`, `--hidden-dims`: Architecture controls for the VAE.
 - `--beta`: KL weight (default `0.1`).
 - `--max-steps`: Optional step cap per epoch (helpful for smoke tests).
+
+**`run_cicv_vae.py`**
+- `--audio-file`: Optional WAV for offline playback; omit for live input.
+- `--sample-rate`, `--frame-length`, `--hop-length`: Analysis parameters (should match the checkpoint’s training config).
+- `--n-bins`: Chroma resolution fed to the CICV-VAE.
+- `--checkpoint`: `.pt` produced by `scripts/train_cicv_vae.py`.
+- `--temperature`: Scaling factor for the likelihood score.
+- `--device`: Torch device override (`cpu`/`cuda`).
 
 **`run_live_ccf.py`**
 - `--audio-file`: Optional WAV file for offline playback; omit to use a live input device.
