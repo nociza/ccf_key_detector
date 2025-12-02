@@ -1,3 +1,12 @@
+BRANCH stag-main 
+Tom's branch that focuses on VAE implementation. This version has two ways of evauating the in-tone-ness of a psaages:
+1. (same as main) KK SKE. Use the same command as tldr below.
+2. Each hop of input is converted into 1D CICV (autocorrelation of a contineous chroma). It is then fed into a VAE, trained with a dataset of what we think is "in-tune." The "in-tune" reconstruction is then compared to the input CICV, and the score outputed is the L2 loss between. 
+
+checkpoints in checkpoint/cicv_vae.pt (trained with VocalSet)
+precomputed features in build/precomputed
+
+-------------EVA'S ORIGINAL----------
 tldr: 
 
 STEP 0: set up the virtual environment (`python -m venv .venv && source .venv/bin/activate && pip install -e .[dev]`)

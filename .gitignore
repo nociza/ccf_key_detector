@@ -9,9 +9,7 @@ __pycache__/
 .pytest_cache/
 .DS_Store
 *.egg-info/
-*.pt
-build/
-checkpoints/
 dist/
 .idea/
 .vscode/
+build/
